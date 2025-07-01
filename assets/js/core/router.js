@@ -19,6 +19,7 @@ class Router {
         this.addRoute('/evaluations/:id', { name: 'evaluation-detail', component: 'evaluationDetail', requireAuth: true });
         this.addRoute('/users', { name: 'users', component: 'users', requireAuth: true, permission: 'manage_users' });
         this.addRoute('/settings', { name: 'settings', component: 'settings', requireAuth: true, permission: 'manage_settings' });
+        this.addRoute('/register', { name: 'register', component: 'register', requireAuth: false });
     }
     
     addRoute(path, config) {
@@ -26,7 +27,10 @@ class Router {
     }
     
     async navigate(path, pushState = true) {
-        const route = this.findRoute(path);
+        // パスからハッシュとクエリパラメータを分離
+        const mainPath = path.split('?')[0].split('#')[1] || '/';
+
+        const route = this.findRoute(mainPath);
         if (!route) return this.navigate('/dashboard');
 
         if (route.requireAuth && !authManager.isAuthenticated()) {
@@ -43,7 +47,7 @@ class Router {
         }
         
         this.currentRoute = path;
-        await this.renderComponent(route, this.extractParams(path, route.path));
+        await this.renderComponent(route, this.extractParams(mainPath, route.path));
     }
     
     findRoute(path) {
@@ -79,15 +83,19 @@ class Router {
             newEvaluation: showNewEvaluationForm,
             evaluationDetail: viewEvaluation,
             users: showUsers,
-            settings: showSettingsPage
+            settings: showSettingsPage,
+            register: showRegistrationPage
         };
         const pageFunction = functionMap[route.component];
 
         if (typeof pageFunction === 'function') {
-            if (route.component !== 'login') {
+            if (route.component !== 'login' && route.component !== 'register') {
                 document.getElementById('app-header').style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
                 if (navigation) navigation.render();
+            } else {
+                 document.getElementById('app-header').style.display = 'none';
+                 document.getElementById('breadcrumbs').style.display = 'none';
             }
             if (route.component === 'evaluationDetail' && params.id) {
                 pageFunction(params.id);
