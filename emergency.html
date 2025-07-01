@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建設業評価システム - 緊急テスト版</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #1565c0;
+        }
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ 建設業評価システム</h1>
+        <h2>緊急テスト版</h2>
+        
+        <div id="status" class="status">
+            システムを読み込み中...
+        </div>
+        
+        <div id="login-section" style="display: none;">
+            <h3>ログイン</h3>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+                    <input type="email" id="email" value="admin@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" value="password123" required>
+                </div>
+                <button type="submit" class="btn">ログイン</button>
+            </form>
+        </div>
+        
+        <div id="dashboard-section" style="display: none;">
+            <h3>✅ ログイン成功！</h3>
+            <p>ダッシュボードページです</p>
+            <button class="btn" onclick="showEvaluations()">評価一覧</button>
+            <button class="btn" onclick="showUsers()">ユーザー管理</button>
+            <button class="btn" onclick="logout()">ログアウト</button>
+        </div>
+        
+        <div id="evaluations-section" style="display: none;">
+            <h3>📋 評価一覧</h3>
+            <p>評価一覧ページです</p>
+            <button class="btn" onclick="showDashboard()">ダッシュボードに戻る</button>
+        </div>
+        
+        <div id="users-section" style="display: none;">
+            <h3>👥 ユーザー管理</h3>
+            <p>ユーザー管理ページです</p>
+            <button class="btn" onclick="showDashboard()">ダッシュボードに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Emergency test version started');
+        
+        // シンプルな状態管理
+        let currentUser = null;
+        let currentPage = 'loading';
+        
+        // 初期化
+        setTimeout(() => {
+            updateStatus('システム読み込み完了');
+            showLoginForm();
+        }, 1000);
+        
+        function updateStatus(message) {
+            const status = document.getElementById('status');
+            if (status) {
+                status.textContent = message;
+            }
+            console.log('Status:', message);
+        }
+        
+        function showLoginForm() {
+            console.log('📝 Showing login form');
+            hideAllSections();
+            document.getElementById('login-section').style.display = 'block';
+            updateStatus('ログインしてください');
+        }
+        
+        function showDashboard() {
+            console.log('🏠 Showing dashboard');
+            hideAllSections();
+            document.getElementById('dashboard-section').style.display = 'block';
+            updateStatus(`ようこそ、${currentUser?.name || 'ユーザー'}さん`);
+        }
+        
+        function showEvaluations() {
+            console.log('📋 Showing evaluations');
+            hideAllSections();
+            document.getElementById('evaluations-section').style.display = 'block';
+            updateStatus('評価一覧を表示中');
+        }
+        
+        function showUsers() {
+            console.log('👥 Showing users');
+            hideAllSections();
+            document.getElementById('users-section').style.display = 'block';
+            updateStatus('ユーザー管理を表示中');
+        }
+        
+        function hideAllSections() {
+            ['login-section', 'dashboard-section', 'evaluations-section', 'users-section'].forEach(id => {
+                const section = document.getElementById(id);
+                if (section) section.style.display = 'none';
+            });
+        }
+        
+        function logout() {
+            console.log('🚪 Logging out');
+            currentUser = null;
+            showLoginForm();
+        }
+        
+        // ログインフォーム処理
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('🔐 Login attempt:', email);
+            updateStatus('ログイン中...');
+            
+            // デモ認証
+            setTimeout(() => {
+                if (email === 'admin@company.com' && password === 'password123') {
+                    currentUser = { name: '田中 太郎', role: 'admin' };
+                    console.log('✅ Login successful');
+                    showDashboard();
+                } else {
+                    console.log('❌ Login failed');
+                    updateStatus('ログインに失敗しました');
+                    alert('ログインに失敗しました。正しいメールアドレスとパスワードを入力してください。');
+                }
+            }, 500);
+        });
+        
+        console.log('✅ Emergency test version ready');
+    </script>
+</body>
+</html>

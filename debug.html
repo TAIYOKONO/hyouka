@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファイル構成チェック</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .file-check {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-check.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .file-check.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .file-check.loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status {
+            font-weight: bold;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+        }
+        .file-structure {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-line;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>建設業評価システム - ファイル構成チェック</h1>
+        
+        <div class="instructions">
+            <h3>📋 必要なファイル構成</h3>
+            <div class="file-structure">evaluation-tool/
+├── index.html
+├── debug.html (このファイル)
+├── assets/
+│   ├── css/
+│   │   ├── variables.css
+│   │   ├── main.css
+│   │   ├── components.css
+│   │   └── responsive.css
+│   └── js/
+│       ├── utils/
+│       │   └── constants.js
+│       ├── data/
+│       │   └── mock-data.js
+│       ├── core/
+│       │   ├── auth.js
+│       │   ├── api.js
+│       │   ├── router.js
+│       │   └── app.js
+│       ├── components/
+│       │   ├── notification.js
+│       │   ├── navigation.js
+│       │   └── evaluation-form.js
+│       └── pages/
+│           ├── dashboard.js
+│           ├── evaluations.js
+│           └── users.js</div>
+        </div>
+
+        <h2>📄 ファイル存在チェック</h2>
+        <div id="file-checks">
+            <!-- JavaScriptで動的に生成 -->
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button onclick="location.href='index.html'" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                メインアプリを開く
+            </button>
+            <button onclick="recheckFiles()" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                再チェック
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const requiredFiles = [
+            // CSS
+            'assets/css/variables.css',
+            'assets/css/main.css',
+            'assets/css/components.css',
+            'assets/css/responsive.css',
+            
+            // Utils
+            'assets/js/utils/constants.js',
+            
+            // Data
+            'assets/js/data/mock-data.js',
+            
+            // Core
+            'assets/js/core/auth.js',
+            'assets/js/core/api.js',
+            'assets/js/core/router.js',
+            'assets/js/core/app.js',
+            
+            // Components
+            'assets/js/components/notification.js',
+            'assets/js/components/navigation.js',
+            'assets/js/components/evaluation-form.js',
+            
+            // Pages
+            'assets/js/pages/dashboard.js',
+            'assets/js/pages/evaluations.js',
+            'assets/js/pages/users.js'
+        ];
+
+        async function checkFile(path) {
+            try {
+                const response = await fetch(path, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function checkAllFiles() {
+            const container = document.getElementById('file-checks');
+            container.innerHTML = '';
+
+            for (const file of requiredFiles) {
+                const div = document.createElement('div');
+                div.className = 'file-check loading';
+                div.innerHTML = `
+                    <span>${file}</span>
+                    <span class="status">チェック中...</span>
+                `;
+                container.appendChild(div);
+
+                const exists = await checkFile(file);
+                
+                div.className = `file-check ${exists ? 'success' : 'error'}`;
+                div.querySelector('.status').textContent = exists ? '✅ OK' : '❌ 見つかりません';
+            }
+
+            // 結果サマリー
+            const allFiles = container.querySelectorAll('.file-check');
+            const successCount = container.querySelectorAll('.file-check.success').length;
+            const errorCount = container.querySelectorAll('.file-check.error').length;
+
+            const summary = document.createElement('div');
+            summary.style.cssText = 'margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; text-align: center; font-weight: bold;';
+            
+            if (errorCount === 0) {
+                summary.style.background = '#d4edda';
+                summary.style.color = '#155724';
+                summary.innerHTML = `🎉 すべてのファイルが正常に配置されています！ (${successCount}/${allFiles.length})`;
+            } else {
+                summary.style.background = '#f8d7da';
+                summary.style.color = '#721c24';
+                summary.innerHTML = `⚠️ ${errorCount}個のファイルが見つかりません。ファイルを正しい場所に配置してください。`;
+            }
+            
+            container.appendChild(summary);
+        }
+
+        function recheckFiles() {
+            checkAllFiles();
+        }
+
+        // ページロード時にチェック実行
+        document.addEventListener('DOMContentLoaded', checkAllFiles);
+    </script>
+</body>
+</html>
