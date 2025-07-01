@@ -1,8 +1,6 @@
 /**
- * app.js - 建設業評価システム メインアプリケーション
- * 全体の初期化・状態管理・グローバル機能統合 (Firebase連携版)
+ * app.js - 建設業評価システム メインアプリケーション (ルーター起動修正版)
  */
-
 class ConstructionEvaluationApp {
     constructor() {
         this.version = '1.0.0';
@@ -17,7 +15,6 @@ class ConstructionEvaluationApp {
             lastActivity: Date.now()
         };
         
-        // モジュール参照
         this.auth = null;
         this.router = null;
         this.notifications = null;
@@ -42,7 +39,11 @@ class ConstructionEvaluationApp {
             
             await this.initializeModules();
             this.setupEventListeners();
-            this.showInitialPage();
+            
+            // ★ ルーターを起動し、現在のURLに基づいて最初のページを表示
+            if (this.router) {
+                this.router.start();
+            }
             
             this.initialized = true;
             console.log('✅ Construction Evaluation System initialized successfully');
@@ -55,7 +56,13 @@ class ConstructionEvaluationApp {
     
     async initializeModules() {
         if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
-        if (typeof router !== 'undefined') this.router = router;
+        
+        // ★ Routerのインスタンス化の方法を変更
+        if (typeof AppRouter !== 'undefined') {
+            this.router = new AppRouter();
+            window.router = this.router;
+        }
+
         if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
         if (typeof navigation !== 'undefined') this.navigation = navigation;
     }
@@ -69,18 +76,7 @@ class ConstructionEvaluationApp {
         });
     }
     
-    showInitialPage() {
-        if (this.auth.isAuthenticated()) {
-            document.body.classList.remove('login-mode');
-            document.body.classList.add('authenticated');
-            this.navigation.render();
-            if (this.router) this.router.navigate('/dashboard');
-        } else {
-            document.body.classList.add('login-mode');
-            document.body.classList.remove('authenticated');
-            if (this.router) this.router.navigate('/');
-        }
-    }
+    // ★ showInitialPageは不要になったため削除
 
     async handleLogin(event) {
         const email = document.getElementById('email')?.value;
@@ -108,6 +104,7 @@ class ConstructionEvaluationApp {
         if (!result.success) {
             this.notifications?.show(result.message, 'error');
         }
+        // 成功時の処理はonAuthStateChangedが検知して自動で行う
     }
 
     setupGlobalErrorHandler() {
