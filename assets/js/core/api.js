@@ -1,123 +1,89 @@
 /**
- * API通信クライアント (Firebase Firestore連携版)
+ * API通信クライアント (ユーザー追加機能対応版)
  */
 class ApiClient {
     constructor() {
         this.db = firebase.firestore();
-        console.log(`API Client initialized - Using Firestore`);
+        this.auth = firebase.auth();
     }
 
+    // statusが'active'のユーザーのみ取得するように変更
     async getUsers() {
-        try {
-            const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            throw error;
-        }
+        const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    async getEvaluations() {
-        try {
-            const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error)
-        {
-            console.error("Error fetching evaluations:", error);
-            throw error;
-        }
+    // --- 招待・承認関連の関数 ---
+    async createInvitation(invitationData) {
+        const docRef = await this.db.collection('invitations').add({
+            ...invitationData,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            used: false,
+        });
+        return docRef.id;
+    }
+
+    async getInvitationByToken(token) {
+        const doc = await this.db.collection('invitations').doc(token).get();
+        return doc.exists ? { id: doc.id, ...doc.data() } : null;
     }
     
-    async createEvaluation(evaluationData) {
-        try {
-            const dataWithTimestamp = {
-                ...evaluationData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            const docRef = await this.db.collection('evaluations').add(dataWithTimestamp);
-            return { id: docRef.id, ...dataWithTimestamp };
-        } catch (error) {
-            console.error("Error creating evaluation:", error);
-            throw error;
-        }
-    }
-
-    async getEvaluationItems() {
-        try {
-            const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error fetching evaluation items:", error);
-            throw error;
-        }
-    }
-
-    async createEvaluationItem(itemData) {
-        try {
-            await this.db.collection('evaluationItems').add(itemData);
-        } catch (error) {
-            console.error("Error creating evaluation item:", error);
-            throw error;
-        }
-    }
-
-    async deleteEvaluationItem(id) {
-        try {
-            await this.db.collection('evaluationItems').doc(id).delete();
-        } catch (error) {
-            console.error("Error deleting evaluation item:", error);
-            throw error;
-        }
-    }
-
-    /**
-     * 招待データを作成する
-     * @param {{role: string}} invitationData - 招待する役割
-     * @returns {Promise<string>} 招待ID
-     */
-    async createInvitation(invitationData) {
-        try {
-            const docRef = await this.db.collection('invitations').add({
-                ...invitationData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                used: false,
-            });
-            return docRef.id;
-        } catch (error) {
-            console.error("Error creating invitation:", error);
-            throw error;
-        }
-    }
-
-    /**
-     * 承認待ちのユーザー一覧を取得する
-     * @returns {Promise<Array>} 承認待ちユーザーの配列
-     */
     async getPendingUsers() {
-        try {
-            const snapshot = await this.db.collection('users').where('status', '==', 'pending_approval').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error fetching pending users:", error);
-            throw error;
-        }
+        const snapshot = await this.db.collection('users').where('status', '==', 'pending_approval').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    /**
-     * ユーザーを承認する
-     * @param {string} userId - 承認するユーザーのID
-     */
     async approveUser(userId) {
-        try {
-            await this.db.collection('users').doc(userId).update({
-                status: 'active'
-            });
-        } catch (error) {
-            console.error("Error approving user:", error);
-            throw error;
+        await this.db.collection('users').doc(userId).update({ status: 'active' });
+    }
+
+    // --- 新規ユーザー登録処理 ---
+    async createUserWithPendingApproval(userData) {
+        // 招待トークンを検証
+        const invitationRef = this.db.collection('invitations').doc(userData.token);
+        const invitationDoc = await invitationRef.get();
+        if (!invitationDoc.exists || invitationDoc.data().used) {
+            throw new Error("無効な招待です。");
         }
+
+        // Firebase Authenticationにユーザーを作成
+        const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
+        
+        // Firestoreにユーザー情報を保存 (承認待ちステータスで)
+        await this.db.collection('users').doc(userCredential.user.uid).set({
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            status: 'pending_approval',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // 招待トークンを使用済みに更新
+        await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
+
+        // 作成後すぐにログアウトさせる
+        await this.auth.signOut();
+    }
+
+    // --- 既存の関数（変更なし） ---
+    async getEvaluations() {
+        const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    async createEvaluation(evaluationData) {
+        const dataWithTimestamp = { ...evaluationData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        const docRef = await this.db.collection('evaluations').add(dataWithTimestamp);
+        return { id: docRef.id, ...dataWithTimestamp };
+    }
+    async getEvaluationItems() {
+        const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    async createEvaluationItem(itemData) {
+        await this.db.collection('evaluationItems').add(itemData);
+    }
+    async deleteEvaluationItem(id) {
+        await this.db.collection('evaluationItems').doc(id).delete();
     }
 }
-
 window.api = new ApiClient();
