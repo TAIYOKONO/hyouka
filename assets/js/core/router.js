@@ -95,12 +95,12 @@ class Router {
         const pageFunction = functionMap[route.component];
 
         if (typeof pageFunction === 'function') {
-            // ★★★ ここから表示モードの切り替え処理を追加 ★★★
+            // 表示モードの切り替え処理
             if (route.component !== 'login' && route.component !== 'register') {
                 // 認証済みページの表示
                 document.body.classList.remove('login-mode');
                 document.body.classList.add('authenticated');
-                document.getElementById('app-header').style.display = 'block';
+                document.getElementById('app-header').style.display = 'block';document.getElementById（ 'app-header'）。style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
                 if (window.navigation) window.navigation.render();
             } else {
@@ -110,7 +110,6 @@ class Router {
                 document.getElementById('app-header').style.display = 'none';
                 document.getElementById('breadcrumbs').style.display = 'none';
             }
-            // ★★★ ここまで追加 ★★★
 
             if (route.component === 'evaluationDetail' && params.id) {
                 pageFunction(params.id);
