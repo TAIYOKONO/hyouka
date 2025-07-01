@@ -6,7 +6,6 @@
     <title>建設業評価システム</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
     
-    <!-- CSS読み込み（順序重要） -->
     <link rel="stylesheet" href="assets/css/variables.css">
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/components.css">
@@ -14,7 +13,6 @@
 </head>
 <body class="login-mode">
     <div class="app-container">
-        <!-- ヘッダー（ログイン時のみ表示） -->
         <header id="app-header" class="app-header" style="display: none;">
             <div class="header-content">
                 <div class="logo">
@@ -36,12 +34,9 @@
             </div>
         </header>
 
-        <!-- ブレッドクラム -->
         <div id="breadcrumbs" class="breadcrumbs" style="display: none;"></div>
 
-        <!-- メインコンテンツ -->
         <main id="main-content" class="main-content">
-            <!-- 初期状態：ログインページ -->
             <div class="login-page">
                 <div class="login-container">
                     <div class="login-header">
@@ -78,101 +73,61 @@
                             <div class="demo-account">
                                 <strong>管理者:</strong> admin@company.com / password123
                             </div>
-                            <div class="demo-account">
-                                <strong>マネージャー:</strong> manager@company.com / password123
-                            </div>
-                            <div class="demo-account">
-                                <strong>主任:</strong> supervisor@company.com / password123
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- フッター -->
         <footer class="app-footer">
             <p>&copy; 2025 建設業評価システム. All rights reserved.</p>
         </footer>
     </div>
 
-    <!-- 通知コンテナ -->
     <div id="notification-container"></div>
 
-    <!-- JavaScript読み込み（依存関係順） -->
-    
-    <!-- 1. Core系（基盤） -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+      // ご自身のFirebaseプロジェクトの構成情報に置き換えてください
+      const firebaseConfig = {
+        apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        authDomain: "your-project-id.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project-id.appspot.com",
+        messagingSenderId: "1234567890",
+        appId: "1:1234567890:web:XXXXXXXXXXXXXXXXXXXXXX"
+      };
+
+      // Firebaseを初期化
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+    </script>
     <script src="assets/js/core/i18n.js"></script>
     <script src="assets/js/data/mock-data.js"></script>
     <script src="assets/js/core/auth.js"></script>
     <script src="assets/js/core/router.js"></script>
-    
-    <!-- 2. Components系（コンポーネント） -->
     <script src="assets/js/components/pentagon-chart.js"></script>
     <script src="assets/js/components/notification.js"></script>
-    
-    <!-- 3. Utils系（ユーティリティ） -->
     <script src="assets/js/utils/helpers.js"></script>
-    
-    <!-- 4. Pages系（ページ） -->
     <script src="assets/js/pages/dashboard.js"></script>
     <script src="assets/js/pages/evaluations.js"></script>
     <script src="assets/js/pages/users.js"></script>
-    
-    <!-- 5. Main App（最後に読み込み） -->
     <script src="assets/js/core/app.js"></script>
-
-    <!-- 初期化スクリプト -->
+    
     <script>
-        // DOM読み込み完了時に初期化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Building evaluation system started');
-            
             try {
-                // アプリケーション初期化
                 app.init();
             } catch (error) {
                 console.error('⚠️ App initialization failed:', error);
-                
-                // フォールバック：基本的なイベントリスナーを設定
-                setupBasicEventListeners();
             }
-            
             console.log('✅ Building evaluation system ready');
         });
-        
-        // 基本イベントリスナー設定（フォールバック）
-        function setupBasicEventListeners() {
-            const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    if (typeof authHelpers !== 'undefined') {
-                        authHelpers.handleLogin(e);
-                    }
-                });
-            }
-            
-            // 言語切り替え
-            const loginLangSelect = document.getElementById('login-language-select');
-            const headerLangSelect = document.getElementById('header-language-select');
-            
-            if (loginLangSelect) {
-                loginLangSelect.addEventListener('change', function() {
-                    if (typeof i18n !== 'undefined') {
-                        i18n.setLanguage(this.value);
-                    }
-                });
-            }
-            
-            if (headerLangSelect) {
-                headerLangSelect.addEventListener('change', function() {
-                    if (typeof i18n !== 'undefined') {
-                        i18n.setLanguage(this.value);
-                    }
-                });
-            }
-        }
     </script>
 </body>
 </html>
