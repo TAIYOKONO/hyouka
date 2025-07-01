@@ -86,12 +86,19 @@
 
     <div id="notification-container"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><スクリプトsrc = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"> 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-      // ご自身のFirebaseプロジェクトの構成情報に置き換えてください
+     const firebaseConfig = {
+  apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
+  authDomain: "hyouka-db.firebaseapp.com",
+  projectId: "hyouka-db",
+  storageBucket: "hyouka-db.firebasestorage.app",
+  messagingSenderId: "861016804589",
+  appId: "1:861016804589:web:d911d516d6c79aa73690e4"
+};
       const firebaseConfig = {
         apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         authDomain: "your-project-id.firebaseapp.com",
@@ -100,6 +107,7 @@
         messagingSenderId: "1234567890",
         appId: "1:1234567890:web:XXXXXXXXXXXXXXXXXXXXXX"
       };
+      // ★★★ ここまで ★★★
 
       // Firebaseを初期化
       if (!firebase.apps.length) {
