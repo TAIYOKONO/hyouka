@@ -1,11 +1,9 @@
 /**
  * dashboard.js - ダッシュボードページ (Firestore連携版)
  */
-
 async function showDashboard() {
     app.currentPage = 'dashboard';
-    // buildNavigation(); // ★この行を削除
-    updateBreadcrumbs([{ label: i18n.t('nav.dashboard') }]);
+    updateBreadcrumbs([{ label: 'ダッシュボード' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>読み込み中...</p></div>`;
@@ -20,67 +18,31 @@ async function showDashboard() {
 
         mainContent.innerHTML = `
             <div class="page">
-                <div class="page-header">
-                    <h1 class="page-title">${i18n.t('dashboard.title')}</h1>
-                    <button class="btn btn-primary" onclick="router.navigate('/evaluations')">
-                        ${i18n.t('nav.evaluations')}
-                    </button>
-                </div>
+                <div class="page-header"><h1 class="page-title">ダッシュボード</h1></div>
                 <div class="page-content">
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number">${evaluations.length}</div>
-                            <div class="stat-label">${i18n.t('dashboard.total')}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${completedEvaluations.length}</div>
-                            <div class="stat-label">${i18n.t('dashboard.completed')}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${averageRating}</div>
-                            <div class="stat-label">${i18n.t('dashboard.average')}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${evaluationCategories.length}</div>
-                            <div class="stat-label">${i18n.t('dashboard.items')}</div>
-                        </div>
+                        <div class="stat-card"><div class="stat-number">${evaluations.length}</div><div class="stat-label">総評価数</div></div>
+                        <div class="stat-card"><div class="stat-number">${completedEvaluations.length}</div><div class="stat-label">完了済み</div></div>
+                        <div class="stat-card"><div class="stat-number">${averageRating}</div><div class="stat-label">平均評価</div></div>
+                        <div class="stat-card"><div class="stat-number">${evaluationCategories.length}</div><div class="stat-label">評価項目数</div></div>
                     </div>
-                    
-                    <h3>${i18n.t('dashboard.recent')}</h3>
+                    <h3>最近の活動</h3>
                     <div class="table-container">
                         <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>${i18n.t('table.target')}</th>
-                                    <th>${i18n.t('table.evaluator')}</th>
-                                    <th>${i18n.t('table.period')}</th>
-                                    <th>${i18n.t('table.status')}</th>
-                                    <th>${i18n.t('table.updated')}</th>
-                                    <th>${i18n.t('table.actions')}</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>評価対象者</th><th>評価者</th><th>評価期間</th><th>ステータス</th><th>更新日</th><th>操作</th></tr></thead>
                             <tbody>
                                 ${evaluations.length === 0 ? `<tr><td colspan="6" style="text-align: center;">データがありません</td></tr>` : ''}
-                                ${evaluations.map(evaluation => `
+                                ${evaluations.map(e => `
                                     <tr>
-                                        <td>${evaluation.subordinate || 'N/A'}</td>
-                                        <td>${evaluation.evaluator || 'N/A'}</td>
-                                        <td>${evaluation.period || 'N/A'}</td>
-                                        <td>${evaluation.status || 'N/A'}</td>
-                                        <td>${evaluation.updatedAt ? new Date(evaluation.updatedAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
-                                        <td>
-                                            <button class="btn btn-secondary" onclick="router.navigate('/evaluations/${evaluation.id}')">
-                                                ${i18n.t('action.detail')}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                        <td>${e.subordinate||''}</td><td>${e.evaluator||''}</td><td>${e.period||''}</td>
+                                        <td>${e.status||''}</td><td>${e.updatedAt ? new Date(e.updatedAt.seconds * 1000).toLocaleDateString() : ''}</td>
+                                        <td><button class="btn btn-secondary" onclick="router.navigate('/evaluations/${e.id}')">詳細</button></td>
+                                    </tr>`).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-        `;
+            </div>`;
     } catch (error) {
         console.error("Failed to show dashboard:", error);
         mainContent.innerHTML = `<div class="page-content"><p>ダッシュボードの読み込みに失敗しました。</p></div>`;
