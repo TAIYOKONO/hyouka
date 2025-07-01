@@ -144,16 +144,19 @@ class ConstructionEvaluationApp {
     /**
      * グローバルエラーハンドラー設定
      */
-    setupGlobalErrorHandler() {
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-            this.notifications?.error('予期しないエラーが発生しました');
-        });
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            this.notifications?.error('処理中にエラーが発生しました');
-        });
-    }
+   // app.js の中のこの関数を修正
+setupGlobalErrorHandler() {
+    window.addEventListener('error', (event) => {
+        console.error('Global error:', event.error);
+        // ★ .error() を .show(..., 'error') に修正
+        this.notifications?.show('予期しないエラーが発生しました', 'error');
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        console.error('Unhandled promise rejection:', event.reason);
+        // ★ .error() を .show(..., 'error') に修正}
+        this.notifications?.show('処理中にエラーが発生しました', 'error');
+    });
+}
 
     /**
      * オンライン状態監視設定
