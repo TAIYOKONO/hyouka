@@ -2,22 +2,18 @@
  * dashboard.js - ダッシュボードページ (Firestore連携版)
  */
 
-// ★ 関数を非同期(async)に変更
 async function showDashboard() {
     app.currentPage = 'dashboard';
-    buildNavigation();
+    // buildNavigation(); // ★この行を削除
     updateBreadcrumbs([{ label: i18n.t('nav.dashboard') }]);
     
     const mainContent = document.getElementById('main-content');
-    // ★ データ読み込み中の表示
     mainContent.innerHTML = `<div class="page-content"><p>読み込み中...</p></div>`;
 
     try {
-        // ★ API経由で評価データを取得
         const evaluations = await api.getEvaluations();
         const evaluationCategories = await api.getEvaluationCategories();
 
-        // ★ 取得したデータから統計情報を計算
         const completedEvaluations = evaluations.filter(e => e.status === 'completed');
         const totalRating = completedEvaluations.reduce((sum, e) => sum + e.overallRating, 0);
         const averageRating = completedEvaluations.length > 0 ? (totalRating / completedEvaluations.length).toFixed(1) : 'N/A';
