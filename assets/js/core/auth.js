@@ -46,7 +46,7 @@ class AuthManager {
             let message = 'ログインに失敗しました。';
             if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 message = 'メールアドレスまたはパスワードが間違っています。';
-            }}
+            }
             return { success: false, error: error.message, message: message };
         }
     }
