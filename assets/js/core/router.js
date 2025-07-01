@@ -100,7 +100,7 @@ class Router {
                 // 認証済みページの表示
                 document.body.classList.remove('login-mode');
                 document.body.classList.add('authenticated');
-                document.getElementById('app-header').style.display = 'block';document.getElementById（ 'app-header'）。style.display = 'block';
+                document.getElementById('app-header').style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
                 if (window.navigation) window.navigation.render();
             } else {
