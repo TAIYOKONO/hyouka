@@ -36,6 +36,7 @@ class NavigationManager {
             { id: 'dashboard', label: 'ダッシュボード', path: '/dashboard', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'evaluations', label: '評価一覧', path: '/evaluations', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'users', label: 'ユーザー管理', path: '/users', roles: ['admin'] },
+            { id: 'settings', label: '評価項目設定', path: '/settings', roles: ['admin'] },
         ];
     }
 
