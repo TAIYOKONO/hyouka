@@ -22,6 +22,7 @@ class ConstructionEvaluationApp {
         this.router = null;
         this.notifications = null;
         this.charts = new Map();
+        this.navigation = null; // ★追加
     }
     
     /**
@@ -73,6 +74,7 @@ class ConstructionEvaluationApp {
         }
         if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
         if (typeof pentagonChartManager !== 'undefined') this.chartManager = pentagonChartManager;
+        if (typeof navigation !== 'undefined') this.navigation = navigation; // ★追加
     }
 
     /**
@@ -102,6 +104,7 @@ class ConstructionEvaluationApp {
         if (this.auth.isAuthenticated()) {
             document.body.classList.remove('login-mode');
             document.body.classList.add('authenticated');
+            this.navigation.render(); // ★追加：ヘッダーを描画
             if (this.router) this.router.navigate('/dashboard');
         } else {
             document.body.classList.add('login-mode');
@@ -144,19 +147,16 @@ class ConstructionEvaluationApp {
     /**
      * グローバルエラーハンドラー設定
      */
-// app.js の中のこの関数を修正
-setupGlobalErrorHandler() {
-    window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
-        // .error() を .show(..., 'error') に修正
-        this.notifications?.show('予期しないエラーが発生しました', 'error');
-    });
-    window.addEventListener('unhandledrejection', (event) => {
-        console.error('Unhandled promise rejection:', event.reason);
-        // .error() を .show(..., 'error') に修正
-        this.notifications?.show('処理中にエラーが発生しました', 'error');
-    });
-}
+    setupGlobalErrorHandler() {
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            this.notifications?.show('予期しないエラーが発生しました', 'error');
+        });
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            this.notifications?.show('処理中にエラーが発生しました', 'error');
+        });
+    }
 
     /**
      * オンライン状態監視設定
