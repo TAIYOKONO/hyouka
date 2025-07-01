@@ -73,6 +73,12 @@
                             <div class="demo-account">
                                 <strong>管理者:</strong> admin@company.com / password123
                             </div>
+                            <div class="demo-account">
+                                <strong>マネージャー:</strong> manager@company.com / password123
+                            </div>
+                            <div class="demo-account">
+                                <strong>主任:</strong> supervisor@company.com / password123
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,36 +92,43 @@
 
     <div id="notification-container"></div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><スクリプトsrc = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
-     const firebaseConfig = {
-  apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
-  authDomain: "hyouka-db.firebaseapp.com",
-  projectId: "hyouka-db",
-  storageBucket: "hyouka-db.firebasestorage.app",
-  messagingSenderId: "861016804589",
-  appId: "1:861016804589:web:d911d516d6c79aa73690e4"
-};
+      // ご自身のFirebaseプロジェクトの構成情報に置き換えてください
+      const firebaseConfig = {
+        apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+        authDomain: "your-project-id.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project-id.appspot.com",
+        messagingSenderId: "1234567890",
+        appId: "1:1234567890:web:XXXXXXXXXXXXXXXXXXXXXX"
+      };
+
       // Firebaseを初期化
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
       }
     </script>
-    <script src="assets/js/core/i18n.js"></script> 
+    
+    <script src="assets/js/core/i18n.js"></script>
     <script src="assets/js/core/auth.js"></script>
     <script src="assets/js/core/router.js"></script>
-    <script src="assets/js/core/api.js"></script> 
+    <script src="assets/js/core/api.js"></script>
+    
     <script src="assets/js/components/pentagon-chart.js"></script>
     <script src="assets/js/components/notification.js"></script>
+    
     <script src="assets/js/utils/helpers.js"></script>
+    
     <script src="assets/js/pages/dashboard.js"></script>
     <script src="assets/js/pages/evaluations.js"></script>
     <script src="assets/js/pages/users.js"></script>
-    <script src="assets/js/core/app.js"></script>
     
+    <script src="assets/js/core/app.js"></script>
+
     <script>
         // DOM読み込み完了時に初期化
         document.addEventListener('DOMContentLoaded', function() {
@@ -123,14 +136,12 @@
             
             try {
                 // アプリケーションのメイン初期化処理を呼び出す
-                // この中でイベントリスナーも設定される
                 window.app.init();
 
             } catch (error) {
                 // 初期化中に致命的なエラーが発生した場合
                 console.error('⚠️ App initialization failed:', error);
                 
-                // ユーザーにエラーを通知
                 const mainContent = document.getElementById('main-content');
                 if (mainContent) {
                     mainContent.innerHTML = `
