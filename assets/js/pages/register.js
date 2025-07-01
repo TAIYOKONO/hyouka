@@ -29,7 +29,7 @@ async function showRegistrationPage() {
                         <button type="submit" class="btn btn-primary" style="width: 100%;">登録</button>
                     </form>
                 </div>
-            </div>`; `;
+            </div>`;
         
         document.getElementById('registration-form').addEventListener('submit', handleRegistration);
 
