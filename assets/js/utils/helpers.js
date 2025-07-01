@@ -13,31 +13,7 @@ function getCategoryDesc(index) {
     return i18n.t(descKeys[index]);
 }
 
-// ナビゲーション構築
-function buildNavigation() {
-    const navMenu = document.getElementById('nav-menu');
-    const userInfo = document.getElementById('user-info');
-    
-    if (navMenu) {
-        navMenu.innerHTML = `
-            <li><a href="#" class="nav-link ${app.currentPage === 'dashboard' ? 'active' : ''}" onclick="showDashboard()">${i18n.t('nav.dashboard')}</a></li>
-            <li><a href="#" class="nav-link ${app.currentPage === 'evaluations' ? 'active' : ''}" onclick="showEvaluations()">${i18n.t('nav.evaluations')}</a></li>
-        `;
-    }
-    
-    if (userInfo && app.currentUser) {
-        userInfo.innerHTML = `
-            <div class="user-avatar">${app.currentUser.name.charAt(0)}</div>
-            <div class="user-details">
-                <div class="user-name">${app.currentUser.name}</div>
-                <div class="user-role">管理者</div>
-            </div>
-            <button onclick="logout()" style="margin-left: 12px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                ${i18n.t('nav.logout')}
-            </button>
-        `;
-    }
-}
+// buildNavigation() は削除されました
 
 // ブレッドクラム更新
 function updateBreadcrumbs(items) {
@@ -49,7 +25,7 @@ function updateBreadcrumbs(items) {
         if (isLast) {
             return `<span class="current">${item.label}</span>`;
         } else {
-            return `<a href="#" onclick="navigateFromBreadcrumb('${item.path || ''}')">${item.label}</a>`;
+            return `<a href="#" onclick="router.navigate('${item.path || ''}')">${item.label}</a>`;
         }
     }).join(' <span class="separator">></span> ');
 }
