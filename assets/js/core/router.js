@@ -18,6 +18,7 @@ class Router {
         this.addRoute('/evaluations/new', { name: 'new-evaluation', component: 'newEvaluation', requireAuth: true });
         this.addRoute('/evaluations/:id', { name: 'evaluation-detail', component: 'evaluationDetail', requireAuth: true });
         this.addRoute('/users', { name: 'users', component: 'users', requireAuth: true, permission: 'manage_users' });
+        this.addRoute('/settings', { name: 'settings', component: 'settings', requireAuth: true, permission: 'manage_settings' });
     }
     
     addRoute(path, config) {
@@ -78,6 +79,7 @@ class Router {
             newEvaluation: showNewEvaluationForm,
             evaluationDetail: viewEvaluation,
             users: showUsers,
+            settings: showSettingsPage
         };
         const pageFunction = functionMap[route.component];
 
