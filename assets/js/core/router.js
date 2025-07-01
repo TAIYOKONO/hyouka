@@ -1,14 +1,25 @@
 /**
- * router.js - 建設業評価システム ルーティング管理
+ * router.js - 建設業評価システム ルーティング管理 (GitHub Pages対応版)
  */
 class Router {
     constructor() {
         this.routes = new Map();
         this.currentRoute = '/';
+        // ★ アプリケーションのベースパスを自動的に判定
+        this.basePath = window.location.pathname.replace(/(\/index\.html|\/404\.html|\/)$/, '');
         this.setupRoutes();
-        window.addEventListener('popstate', (event) => {
-            if (event.state && event.state.route) this.navigate(event.state.route, false);
-        });
+
+        // 初回読み込み時に現在のパスを処理
+        this.handleLocationChange();
+
+        // ブラウザの戻る/進むボタン対応
+        window.addEventListener('popstate', () => this.handleLocationChange());
+    }
+
+    // ★ 現在のURLからパスを解決する関数を追加
+    handleLocationChange() {
+        const path = window.location.pathname.substring(this.basePath.length) || '/';
+        this.navigate(path, false);
     }
     
     setupRoutes() {
@@ -27,10 +38,7 @@ class Router {
     }
     
     async navigate(path, pushState = true) {
-        // パスからハッシュとクエリパラメータを分離
-        const mainPath = path.split('?')[0].split('#')[1] || '/';
-
-        const route = this.findRoute(mainPath);
+        const route = this.findRoute(path);
         if (!route) return this.navigate('/dashboard');
 
         if (route.requireAuth && !authManager.isAuthenticated()) {
@@ -42,12 +50,14 @@ class Router {
             return this.navigate('/dashboard', false);
         }
 
+        // ★ history.pushStateでURLを更新する際にベースパスを考慮
         if (pushState) {
-            window.history.pushState({ route: path }, '', path);
+            const newPath = path === '/' ? this.basePath + '/' : this.basePath + path;
+            window.history.pushState({ route: path }, '', newPath);
         }
         
         this.currentRoute = path;
-        await this.renderComponent(route, this.extractParams(mainPath, route.path));
+        await this.renderComponent(route, this.extractParams(path, route.path));
     }
     
     findRoute(path) {
@@ -108,5 +118,11 @@ class Router {
     }
 }
 
-const router = new Router();
-window.router = router;
+// ★ Routerの初期化をapp.jsに移動するため、ここではインスタンスを作成しない
+// const router = new Router();
+// window.router = router;
+
+// ★ app.jsでRouterインスタンスを作成するように変更
+if (typeof window !== 'undefined') {
+    window.AppRouter = Router;
+}
