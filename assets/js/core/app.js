@@ -21,19 +21,11 @@ class ConstructionEvaluationApp {
         this.auth = null;
         this.router = null;
         this.notifications = null;
-        this.charts = new Map();
-        this.navigation = null; // ★追加
+        this.navigation = null;
     }
     
-    /**
-     * アプリケーション初期化 (Firebase認証対応)
-     */
     async init() {
-        if (this.initialized) {
-            console.warn('App already initialized');
-            return;
-        }
-        
+        if (this.initialized) return;
         console.log('🚀 Initializing Construction Evaluation System v' + this.version);
         
         try {
@@ -49,9 +41,7 @@ class ConstructionEvaluationApp {
             });
             
             await this.initializeModules();
-            
             this.setupEventListeners();
-            
             this.showInitialPage();
             
             this.initialized = true;
@@ -63,31 +53,13 @@ class ConstructionEvaluationApp {
         }
     }
     
-    /**
-     * モジュール初期化 (authを除く)
-     */
     async initializeModules() {
         if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
-        if (typeof router !== 'undefined') {
-            this.router = router;
-            this.setupRouterHooks();
-        }
+        if (typeof router !== 'undefined') this.router = router;
         if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
-        if (typeof pentagonChartManager !== 'undefined') this.chartManager = pentagonChartManager;
-        if (typeof navigation !== 'undefined') this.navigation = navigation; // ★追加
+        if (typeof navigation !== 'undefined') this.navigation = navigation;
     }
 
-    /**
-     * ルーターフック設定
-     */
-    setupRouterHooks() {
-        this.router.addHook('before', async (route, currentRoute) => { return true; });
-        this.router.addHook('after', async (route, currentRoute) => { this.currentPage = route.name; });
-    }
-
-    /**
-     * イベントリスナー設定
-     */
     setupEventListeners() {
         document.addEventListener('submit', (event) => {
             if (event.target.id === 'login-form') {
@@ -97,14 +69,11 @@ class ConstructionEvaluationApp {
         });
     }
     
-    /**
-     * 初期ページ表示 (認証状態に基づく)
-     */
     showInitialPage() {
         if (this.auth.isAuthenticated()) {
             document.body.classList.remove('login-mode');
             document.body.classList.add('authenticated');
-            this.navigation.render(); // ★追加：ヘッダーを描画
+            this.navigation.render();
             if (this.router) this.router.navigate('/dashboard');
         } else {
             document.body.classList.add('login-mode');
@@ -113,9 +82,6 @@ class ConstructionEvaluationApp {
         }
     }
 
-    /**
-     * ログイン処理
-     */
     async handleLogin(event) {
         const email = document.getElementById('email')?.value;
         const password = document.getElementById('password')?.value;
@@ -144,9 +110,6 @@ class ConstructionEvaluationApp {
         }
     }
 
-    /**
-     * グローバルエラーハンドラー設定
-     */
     setupGlobalErrorHandler() {
         window.addEventListener('error', (event) => {
             console.error('Global error:', event.error);
@@ -158,17 +121,11 @@ class ConstructionEvaluationApp {
         });
     }
 
-    /**
-     * オンライン状態監視設定
-     */
     setupOnlineStatusMonitoring() {
         window.addEventListener('online', () => this.notifications?.success('オンラインに復帰しました'));
         window.addEventListener('offline', () => this.notifications?.warning('オフラインになりました'));
     }
 
-    /**
-     * 初期化エラー表示
-     */
     showInitializationError(error) {
         const mainContent = document.getElementById('main-content');
         if (mainContent) {
@@ -177,7 +134,6 @@ class ConstructionEvaluationApp {
     }
 }
 
-// グローバルインスタンス作成と公開
 const app = new ConstructionEvaluationApp();
 if (typeof window !== 'undefined') {
     window.app = app;
