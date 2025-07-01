@@ -71,4 +71,22 @@ async function showDashboard() {
                                         <td>${evaluation.evaluator || 'N/A'}</td>
                                         <td>${evaluation.period || 'N/A'}</td>
                                         <td>${evaluation.status || 'N/A'}</td>
-                                        <td>${evaluation.updatedAt ? new Date(evaluation.updatedAt.seconds * 1000).toLocale
+                                        <td>${evaluation.updatedAt ? new Date(evaluation.updatedAt.seconds * 1000).toLocaleDateString() : 'N/A'}</td>
+                                        <td>
+                                            <button class="btn btn-secondary" onclick="router.navigate('/evaluations/${evaluation.id}')">
+                                                ${i18n.t('action.detail')}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error("Failed to show dashboard:", error);
+        mainContent.innerHTML = `<div class="page-content"><p>ダッシュボードの読み込みに失敗しました。</p></div>`;
+    }
+}
