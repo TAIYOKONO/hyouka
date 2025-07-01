@@ -73,12 +73,6 @@
                             <div class="demo-account">
                                 <strong>管理者:</strong> admin@company.com / password123
                             </div>
-                            <div class="demo-account">
-                                <strong>マネージャー:</strong> manager@company.com / password123
-                            </div>
-                            <div class="demo-account">
-                                <strong>主任:</strong> supervisor@company.com / password123
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -99,13 +93,14 @@
     <script>
       // ご自身のFirebaseプロジェクトの構成情報に置き換えてください
       const firebaseConfig = {
-          apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",apikey： "aizasyak3wawizcultksqfyse8l8z-jnmevk5wk"、
-          authDomain: "hyouka-db.firebaseapp.com",
-          projectId: "hyouka-db",
-          storageBucket: "hyouka-db.firebasestorage.app",
-          messagingSenderId: "861016804589",
-          appId: "1:861016804589:web:d911d516d6c79aa73690e4"
-       };
+        apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
+        authDomain: "hyouka-db.firebaseapp.com",
+        projectId: "hyouka-db",
+        storageBucket: "hyouka-db.appspot.com",
+        messagingSenderId: "861016804589",
+        appId: "1:861016804589:web:d911d516d6c79aa73690e4"
+      };
+
       // Firebaseを初期化
       if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
