@@ -39,17 +39,14 @@ class ApiClient {
 
     // --- 新規ユーザー登録処理 ---
     async createUserWithPendingApproval(userData) {
-        // 招待トークンを検証
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
         if (!invitationDoc.exists || invitationDoc.data().used) {
             throw new Error("無効な招待です。");
         }
 
-        // Firebase Authenticationにユーザーを作成
         const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
         
-        // Firestoreにユーザー情報を保存 (承認待ちステータスで)
         await this.db.collection('users').doc(userCredential.user.uid).set({
             name: userData.name,
             email: userData.email,
@@ -58,14 +55,11 @@ class ApiClient {
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
 
-        // 招待トークンを使用済みに更新
         await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
-
-        // 作成後すぐにログアウトさせる
         await this.auth.signOut();
     }
 
-    // --- 既存の関数（変更なし） ---
+    // --- 評価関連の関数 ---
     async getEvaluations() {
         const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -75,6 +69,15 @@ class ApiClient {
         const docRef = await this.db.collection('evaluations').add(dataWithTimestamp);
         return { id: docRef.id, ...dataWithTimestamp };
     }
+    async getEvaluationById(id) {
+        const doc = await this.db.collection('evaluations').doc(id).get();
+        if (doc.exists) {
+            return { id: doc.id, ...doc.data() };
+        }
+        return null;
+    }
+
+    // --- 評価項目関連の関数 ---
     async getEvaluationItems() {
         const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -84,6 +87,11 @@ class ApiClient {
     }
     async deleteEvaluationItem(id) {
         await this.db.collection('evaluationItems').doc(id).delete();
+    }
+
+    // ★ dashboard.jsが呼び出す関数
+    async getEvaluationCategories() {
+        return this.getEvaluationItems();
     }
 }
 window.api = new ApiClient();
