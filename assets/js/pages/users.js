@@ -1,5 +1,5 @@
 /**
- * users.js - ユーザー管理ページ (招待・承認機能付き)
+ * users.js - ユーザー管理ページ (招待モーダル・承認機能付き)
  */
 async function showUsers() {
     app.currentPage = 'users';
@@ -13,8 +13,8 @@ async function showUsers() {
     mainContent.innerHTML = `<div class="page-content"><p>ユーザー情報を読み込み中...</p></div>`;
 
     try {
-        const activeUsers = await api.getUsers(); // statusがactiveのユーザー
-        const pendingUsers = await api.getPendingUsers(); // statusがpending_approvalのユーザー
+        const activeUsers = await api.getUsers();
+        const pendingUsers = await api.getPendingUsers();
 
         mainContent.innerHTML = `
             <div class="page">
@@ -24,7 +24,6 @@ async function showUsers() {
                 </div>
                 <div class="page-content">
                     ${renderPendingUsersSection(pendingUsers)}
-
                     <h3>有効なユーザー一覧</h3>
                     <div class="table-container">
                         <table class="table">
@@ -40,84 +39,103 @@ async function showUsers() {
                         </table>
                     </div>
                 </div>
-            </div>`;
+            </div>
+            <div id="invite-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">ユーザーを招待</h3>
+                        <button class="modal-close" onclick="closeInviteModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="invite-role">招待する役割を選択してください</label>
+                            <select id="invite-role" class="form-control">
+                                <option value="worker">作業員</option>
+                                <option value="evaluator">評価者</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="handleCreateInvitationLink()">招待リンクを作成</button>
+                        <div id="invite-link-area" style="display:none; margin-top: 1rem;">
+                            <p>以下のリンクをコピーして、招待したい方に送ってください。</p>
+                            <input type="text" id="invite-link-input" readonly style="width: 100%; padding: 0.5rem;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     } catch (error) {
         console.error("Failed to show users:", error);
         mainContent.innerHTML = `<div class="page-content"><p>ユーザー一覧の読み込みに失敗しました。</p></div>`;
     }
 }
 
-// 承認待ちユーザーのセクションを描画する
 function renderPendingUsersSection(pendingUsers) {
     const currentUser = authManager.getCurrentUser();
-    // 承認権限のあるユーザー（評価者 or 管理者）のみ表示
     if (!['admin', 'evaluator'].includes(currentUser.role)) return '';
 
-    // 承認対象をフィルタリング
     const usersToApprove = pendingUsers.filter(pendingUser => {
-        if (currentUser.role === 'admin') return true; // 管理者は全員承認可能
-        if (currentUser.role === 'evaluator' && pendingUser.role === 'worker') return true; // 評価者は作業員のみ承認可能
+        if (currentUser.role === 'admin') return true;
+        if (currentUser.role === 'evaluator' && pendingUser.role === 'worker') return true;
         return false;
     });
 
-    if (usersToApprove.length === 0) return '';
+    if (usersToApprove.length === 0) return '<h3>承認待ちのユーザーはいません</h3>';
 
     return `
         <h3>承認待ちのユーザー</h3>
         <div class="table-container mb-5">
             <table class="table">
-                <thead><tr><th>名前</th><th>メールアドレス</th><th>希望役職</th><th>操作</th></tr></thead>
+                <thead><tr><th>名前</th><th>メールアドレス</th><th>希望役職</th><th>操作</th></tr></thead>Router.navigate（ '/dashboard'）を返します。
                 <tbody>
                     ${usersToApprove.map(user => `
                         <tr>
                             <td>${user.name}</td><td>${user.email}</td>
                             <td>${user.role}</td>
-                            <td><button class="btn btn-success" onclick="handleApproveUser('${user.id}')">承認</button></td>
+                            <td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td>
                         </tr>`).join('')}
                 </tbody>
             </table>
         </div>`;
 }
 
-// ユーザー招待モーダルを表示する
 function showInviteUserModal() {
-    // シンプルなpromptで実装
-    const role = prompt("招待するユーザーの役割を入力してください (evaluator または worker):", "worker");
-    if (role && (role === 'evaluator' || role === 'worker')) {
-        handleCreateInvitationLink(role);
-    } else {
-        alert("無効な役割です。");
-    }
+    document.getElementById('invite-modal').classList.add('show');
 }
 
-// 招待リンクを生成して表示する
-async function handleCreateInvitationLink(role) {
+function closeInviteModal() {
+    document.getElementById('invite-modal').classList.remove('show');
+    document.getElementById('invite-link-area').style.display = 'none';
+}
+
+async function handleCreateInvitationLink() {
+    const role = document.getElementById('invite-role').value;
     try {
         const invitationId = await api.createInvitation({ role });
         const registrationUrl = `${window.location.origin}${window.location.pathname}#/register?token=${invitationId}`;
-        prompt(`以下の招待リンクをコピーして、新しいユーザーに送ってください。`, registrationUrl);
+        
+        const linkArea = document.getElementById('invite-link-area');
+        const linkInput = document.getElementById('invite-link-input');
+        linkInput.value = registrationUrl;
+        linkArea.style.display = 'block';
+
     } catch (error) {
         showNotification('招待リンクの作成に失敗しました', 'error');
     }
 }
 
-// ユーザーを承認する
-async function handleApproveUser(userId) {
+async function handleApproveUser(userId, userName) {
+    const currentUser = authManager.getCurrentUser();
     const targetUser = (await api.getPendingUsers()).find(u => u.id === userId);
     if (!targetUser) return showNotification('対象ユーザーが見つかりません', 'error');
 
-    // 管理者の承認ロジック
-    if (targetUser.role === 'admin') {
-        const currentUserEmail = authManager.getCurrentUser().email;
-        if (currentUserEmail !== 't.kono@branu.jp') {
-            return showNotification('管理者アカウントを承認する権限がありません。', 'error');
-        }
+    if (targetUser.role === 'admin' && currentUser.email !== 't.kono@branu.jp') {
+        return showNotification('管理者アカウントを承認する権限がありません。', 'error');
     }
 
-    if (confirm(`${targetUser.name}さんを承認しますか？`)) {
+    if (confirm(`${userName}さんを承認しますか？`)) {
         try {
-            await api.approveUser(userId);
-            showNotification(`${targetUser.name}さんを承認しました`, 'success');
+            await api.approveUser(userId, targetUser.role);
+            showNotification(`${userName}さんを承認しました`, 'success');
             showUsers(); // 画面を再読み込み
         } catch (error) {
             showNotification('承認処理に失敗しました', 'error');
