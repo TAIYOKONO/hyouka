@@ -9,7 +9,7 @@ class ApiClient {
 
     async getUsers() {
         try {
-            const snapshot = await this.db.collection('users').get();
+            const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -21,7 +21,8 @@ class ApiClient {
         try {
             const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
+        } catch (error)
+        {
             console.error("Error fetching evaluations:", error);
             throw error;
         }
@@ -42,12 +43,6 @@ class ApiClient {
         }
     }
 
-    // ★★★ ここから評価項目管理の関数を追加 ★★★
-
-    /**
-     * Firestoreから評価項目一覧を取得する
-     * @returns {Promise<Array>} 評価項目の配列
-     */
     async getEvaluationItems() {
         try {
             const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
@@ -58,10 +53,6 @@ class ApiClient {
         }
     }
 
-    /**
-     * Firestoreに新しい評価項目を作成する
-     * @param {Object} itemData - { name: string, description: string, weight: number, order: number }
-     */
     async createEvaluationItem(itemData) {
         try {
             await this.db.collection('evaluationItems').add(itemData);
@@ -71,24 +62,6 @@ class ApiClient {
         }
     }
 
-    /**
-     * Firestoreの評価項目を更新する
-     * @param {string} id - ドキュメントID
-     * @param {Object} itemData - 更新データ
-     */
-    async updateEvaluationItem(id, itemData) {
-        try {
-            await this.db.collection('evaluationItems').doc(id).update(itemData);
-        } catch (error) {
-            console.error("Error updating evaluation item:", error);
-            throw error;
-        }
-    }
-
-    /**
-     * Firestoreから評価項目を削除する
-     * @param {string} id - ドキュメントID
-     */
     async deleteEvaluationItem(id) {
         try {
             await this.db.collection('evaluationItems').doc(id).delete();
@@ -98,16 +71,52 @@ class ApiClient {
         }
     }
 
-    // ★★★ ここまで追加 ★★★
-
+    /**
+     * 招待データを作成する
+     * @param {{role: string}} invitationData - 招待する役割
+     * @returns {Promise<string>} 招待ID
+     */
+    async createInvitation(invitationData) {
+        try {
+            const docRef = await this.db.collection('invitations').add({
+                ...invitationData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                used: false,
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error("Error creating invitation:", error);
+            throw error;
+        }
+    }
 
     /**
-     * getEvaluationCategoriesはgetEvaluationItemsに置き換えるため、
-     * getEvaluationItemsを呼び出すように変更します。
+     * 承認待ちのユーザー一覧を取得する
+     * @returns {Promise<Array>} 承認待ちユーザーの配列
      */
-    async getEvaluationCategories() {
-        console.log("Redirecting getEvaluationCategories to getEvaluationItems.");
-        return this.getEvaluationItems();
+    async getPendingUsers() {
+        try {
+            const snapshot = await this.db.collection('users').where('status', '==', 'pending_approval').get();
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error("Error fetching pending users:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * ユーザーを承認する
+     * @param {string} userId - 承認するユーザーのID
+     */
+    async approveUser(userId) {
+        try {
+            await this.db.collection('users').doc(userId).update({
+                status: 'active'
+            });
+        } catch (error) {
+            console.error("Error approving user:", error);
+            throw error;
+        }
     }
 }
 
