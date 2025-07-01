@@ -9,16 +9,23 @@ class ConstructionEvaluationApp {
         this.initialized = false;
         this.currentUser = null;
         this.currentPage = 'login';
-        // ... (他のプロパティは変更なし)
+        this.loadingStates = new Map();
+        this.globalState = {
+            language: 'ja',
+            theme: 'light',
+            isOnline: navigator.onLine,
+            lastActivity: Date.now()
+        };
         
         // モジュール参照
         this.auth = null;
         this.router = null;
-        // ...
+        this.notifications = null;
+        this.charts = new Map();
     }
     
     /**
-     * ★ アプリケーション初期化 (Firebase認証対応)
+     * アプリケーション初期化 (Firebase認証対応)
      */
     async init() {
         if (this.initialized) {
@@ -30,23 +37,20 @@ class ConstructionEvaluationApp {
         
         try {
             this.setupGlobalErrorHandler();
+            this.setupOnlineStatusMonitoring();
             
-            // ★ 認証モジュールを初期化し、初回認証状態が確定するのを待つ
             this.auth = window.authManager;
             await new Promise(resolve => {
                 this.auth.init((user) => {
                     this.currentUser = user;
-                    // 初回の認証状態が確定したら次に進む
                     resolve(); 
                 });
             });
             
-            // ★ 認証状態が確定してから、他のモジュールを初期化
             await this.initializeModules();
             
             this.setupEventListeners();
             
-            // ★ 認証状態に基づいて最初のページを表示
             this.showInitialPage();
             
             this.initialized = true;
@@ -62,49 +66,59 @@ class ConstructionEvaluationApp {
      * モジュール初期化 (authを除く)
      */
     async initializeModules() {
-        console.log('📦 Initializing modules...');
-        
-        if (typeof i18n !== 'undefined') {
-            this.i18n = i18n.init ? i18n.init() : i18n;
-        }
+        if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
         if (typeof router !== 'undefined') {
             this.router = router;
             this.setupRouterHooks();
         }
-        if (typeof notificationManager !== 'undefined') {
-            this.notifications = notificationManager;
-        }
-        if (typeof pentagonChartManager !== 'undefined') {
-            this.chartManager = pentagonChartManager;
-        }
+        if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
+        if (typeof pentagonChartManager !== 'undefined') this.chartManager = pentagonChartManager;
     }
 
     /**
-     * ★ 初期ページ表示 (認証状態に基づく)
+     * ルーターフック設定
+     */
+    setupRouterHooks() {
+        this.router.addHook('before', async (route, currentRoute) => { return true; });
+        this.router.addHook('after', async (route, currentRoute) => { this.currentPage = route.name; });
+    }
+
+    /**
+     * イベントリスナー設定
+     */
+    setupEventListeners() {
+        document.addEventListener('submit', (event) => {
+            if (event.target.id === 'login-form') {
+                event.preventDefault();
+                this.handleLogin(event);
+            }
+        });
+    }
+    
+    /**
+     * 初期ページ表示 (認証状態に基づく)
      */
     showInitialPage() {
         if (this.auth.isAuthenticated()) {
             document.body.classList.remove('login-mode');
             document.body.classList.add('authenticated');
-            this.router.navigate('/dashboard');
-        } else {this.Initialized = false;
+            if (this.router) this.router.navigate('/dashboard');
+        } else {
             document.body.classList.add('login-mode');
             document.body.classList.remove('authenticated');
-            this.router.navigate('/');
+            if (this.router) this.router.navigate('/');
         }
     }
 
     /**
-     * ★ ログイン処理 (authManagerを呼び出す)
-     * @param {Event} event - フォームイベント
+     * ログイン処理
      */
     async handleLogin(event) {
-        event.preventDefault();
         const email = document.getElementById('email')?.value;
         const password = document.getElementById('password')?.value;
         
         if (!email || !password) {
-            this.notifications.show('メールアドレスとパスワードを入力してください', 'error');
+            this.notifications?.show('メールアドレスとパスワードを入力してください', 'error');
             return;
         }
         
@@ -123,23 +137,45 @@ class ConstructionEvaluationApp {
         }
 
         if (!result.success) {
-            this.notifications.show(result.message, 'error');
+            this.notifications?.show(result.message, 'error');
         }
-        // ログイン成功時の処理はonAuthStateChangedが検知して自動で行うため、
-        // ここでは失敗時の通知のみでOK
     }
-    
-    // ★ checkSessionRestorationメソッドは不要なので削除する
 
-    // ... その他のメソッドは変更なし ...
+    /**
+     * グローバルエラーハンドラー設定
+     */
+    setupGlobalErrorHandler() {
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            this.notifications?.error('予期しないエラーが発生しました');
+        });
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            this.notifications?.error('処理中にエラーが発生しました');
+        });
+    }
+
+    /**
+     * オンライン状態監視設定
+     */
+    setupOnlineStatusMonitoring() {
+        window.addEventListener('online', () => this.notifications?.success('オンラインに復帰しました'));
+        window.addEventListener('offline', () => this.notifications?.warning('オフラインになりました'));
+    }
+
+    /**
+     * 初期化エラー表示
+     */
+    showInitializationError(error) {
+        const mainContent = document.getElementById('main-content');
+        if (mainContent) {
+            mainContent.innerHTML = `<div style="padding: 40px; text-align: center; color: #721c24; background: #f8d7da; border-radius: 8px;"><h2>システムエラー</h2><p>アプリケーションの起動に失敗しました。</p><p>エラー内容: ${error.message}</p></div>`;
+        }
+    }
 }
 
-// グローバルインスタンス作成
+// グローバルインスタンス作成と公開
 const app = new ConstructionEvaluationApp();
-
-// グローバルに公開
 if (typeof window !== 'undefined') {
     window.app = app;
 }
-
-console.log('🏗️ app.js loaded - Main application ready');
