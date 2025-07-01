@@ -1,6 +1,5 @@
-
 /**
- * router.js - 建設業評価システム ルーティング管理 (GitHub Pages対応・改)
+ * router.js - 建設業評価システム ルーティング管理 (表示モード切替対応版)
  */
 class Router {
     constructor() {
@@ -10,12 +9,10 @@ class Router {
         window.addEventListener('popstate', () => this.handleLocationChange());
     }
 
-    // app.jsから一度だけ呼び出される起動関数
     start() {
         this.handleLocationChange();
     }
 
-    // 現在のURLを解析して適切なページに遷移する
     handleLocationChange() {
         const path = window.location.pathname.substring(this.basePath.length) || '/';
         this.navigate(path, false);
@@ -40,14 +37,17 @@ class Router {
         const route = this.findRoute(path);
         if (!route) return this.navigate('/dashboard');
 
-        // ログインが必要なページに未認証でアクセスした場合、ログインページにリダイレクト
         if (route.requireAuth && !authManager.isAuthenticated()) {
             return this.navigate('/', false);
         }
 
-        // ログイン不要なページ（例：ログイン画面）に認証済みでアクセスした場合、ダッシュボードにリダイレクト
         if (!route.requireAuth && authManager.isAuthenticated() && path !== '/dashboard') {
             return this.navigate('/dashboard', true);
+        }
+
+        if (route.permission && !authManager.hasPermission(route.permission)) {
+            showNotification('このページにアクセスする権限がありません', 'error');
+            return this.navigate('/dashboard', false);
         }
         
         if (pushState) {
@@ -83,10 +83,7 @@ class Router {
 
     async renderComponent(route, params) {
         const functionMap = {
-            login: () => {
-                document.getElementById('app-header').style.display = 'none';
-                document.getElementById('breadcrumbs').style.display = 'none';
-            },
+            login: () => {}, // ログインページはデフォルトで表示
             dashboard: showDashboard,
             evaluations: showEvaluations, 
             newEvaluation: showNewEvaluationForm,
@@ -98,14 +95,23 @@ class Router {
         const pageFunction = functionMap[route.component];
 
         if (typeof pageFunction === 'function') {
+            // ★★★ ここから表示モードの切り替え処理を追加 ★★★
             if (route.component !== 'login' && route.component !== 'register') {
+                // 認証済みページの表示
+                document.body.classList.remove('login-mode');
+                document.body.classList.add('authenticated');
                 document.getElementById('app-header').style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
                 if (window.navigation) window.navigation.render();
             } else {
-                 document.getElementById('app-header').style.display = 'none';
-                 document.getElementById('breadcrumbs').style.display = 'none';
+                // ログイン/登録ページの表示
+                document.body.classList.add('login-mode');
+                document.body.classList.remove('authenticated');
+                document.getElementById('app-header').style.display = 'none';
+                document.getElementById('breadcrumbs').style.display = 'none';
             }
+            // ★★★ ここまで追加 ★★★
+
             if (route.component === 'evaluationDetail' && params.id) {
                 pageFunction(params.id);
             } else {
