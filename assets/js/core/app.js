@@ -144,16 +144,16 @@ class ConstructionEvaluationApp {
     /**
      * グローバルエラーハンドラー設定
      */
-   // app.js の中のこの関数を修正
+// app.js の中のこの関数を修正
 setupGlobalErrorHandler() {
     window.addEventListener('error', (event) => {
         console.error('Global error:', event.error);
-        // ★ .error() を .show(..., 'error') に修正
+        // .error() を .show(..., 'error') に修正
         this.notifications?.show('予期しないエラーが発生しました', 'error');
     });
     window.addEventListener('unhandledrejection', (event) => {
         console.error('Unhandled promise rejection:', event.reason);
-        // ★ .error() を .show(..., 'error') に修正}
+        // .error() を .show(..., 'error') に修正
         this.notifications?.show('処理中にエラーが発生しました', 'error');
     });
 }
