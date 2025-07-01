@@ -1,22 +1,21 @@
+
 /**
- * router.js - 建設業評価システム ルーティング管理 (GitHub Pages対応版)
+ * router.js - 建設業評価システム ルーティング管理 (GitHub Pages対応・改)
  */
 class Router {
     constructor() {
         this.routes = new Map();
-        this.currentRoute = '/';
-        // ★ アプリケーションのベースパスを自動的に判定
         this.basePath = window.location.pathname.replace(/(\/index\.html|\/404\.html|\/)$/, '');
         this.setupRoutes();
-
-        // 初回読み込み時に現在のパスを処理
-        this.handleLocationChange();
-
-        // ブラウザの戻る/進むボタン対応
         window.addEventListener('popstate', () => this.handleLocationChange());
     }
 
-    // ★ 現在のURLからパスを解決する関数を追加
+    // app.jsから一度だけ呼び出される起動関数
+    start() {
+        this.handleLocationChange();
+    }
+
+    // 現在のURLを解析して適切なページに遷移する
     handleLocationChange() {
         const path = window.location.pathname.substring(this.basePath.length) || '/';
         this.navigate(path, false);
@@ -41,16 +40,16 @@ class Router {
         const route = this.findRoute(path);
         if (!route) return this.navigate('/dashboard');
 
+        // ログインが必要なページに未認証でアクセスした場合、ログインページにリダイレクト
         if (route.requireAuth && !authManager.isAuthenticated()) {
             return this.navigate('/', false);
         }
 
-        if (route.permission && !authManager.hasPermission(route.permission)) {
-            showNotification('このページにアクセスする権限がありません', 'error');
-            return this.navigate('/dashboard', false);
+        // ログイン不要なページ（例：ログイン画面）に認証済みでアクセスした場合、ダッシュボードにリダイレクト
+        if (!route.requireAuth && authManager.isAuthenticated() && path !== '/dashboard') {
+            return this.navigate('/dashboard', true);
         }
-
-        // ★ history.pushStateでURLを更新する際にベースパスを考慮
+        
         if (pushState) {
             const newPath = path === '/' ? this.basePath + '/' : this.basePath + path;
             window.history.pushState({ route: path }, '', newPath);
@@ -102,7 +101,7 @@ class Router {
             if (route.component !== 'login' && route.component !== 'register') {
                 document.getElementById('app-header').style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
-                if (navigation) navigation.render();
+                if (window.navigation) window.navigation.render();
             } else {
                  document.getElementById('app-header').style.display = 'none';
                  document.getElementById('breadcrumbs').style.display = 'none';
@@ -113,16 +112,12 @@ class Router {
                 pageFunction();
             }
         } else {
-            document.getElementById('main-content').innerHTML = `<h2>Page not found</h2>`;
+            document.getElementById('main-content').innerHTML = `<h2>Page not found for component: ${route.component}</h2>`;
         }
     }
 }
 
-// ★ Routerの初期化をapp.jsに移動するため、ここではインスタンスを作成しない
-// const router = new Router();
-// window.router = router;
-
-// ★ app.jsでRouterインスタンスを作成するように変更
+// グローバルにクラスを公開し、app.jsでインスタンス化する
 if (typeof window !== 'undefined') {
     window.AppRouter = Router;
 }
