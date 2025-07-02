@@ -1,14 +1,13 @@
 /**
- * register.js - 新規ユーザー登録ページ
+ * register.js - 新規ユーザー登録ページ (最終版)
  */
 async function showRegistrationPage() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>招待情報を確認中...</p></div>`;
 
     try {
-        const params = new URLSearchParams(window.location.hash.split('?')[1]);
+        const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
         const token = params.get('token');
-
         if (!token) throw new Error("招待トークンが見つかりません。");
 
         const invitation = await api.getInvitationByToken(token);
@@ -26,15 +25,13 @@ async function showRegistrationPage() {
                         <div class="form-group"><label>名前</label><input type="text" id="reg-name" required></div>
                         <div class="form-group"><label>メールアドレス</label><input type="email" id="reg-email" required></div>
                         <div class="form-group"><label>パスワード</label><input type="password" id="reg-password" required></div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">登録</button>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">登録申請</button>
                     </form>
                 </div>
             </div>`;
-        
         document.getElementById('registration-form').addEventListener('submit', handleRegistration);
-
     } catch (error) {
-        mainContent.innerHTML = `<div class="page-content"><p>エラー: ${error.message}</p><a href="#">ログインページへ</a></div>`;
+        mainContent.innerHTML = `<div class="page-content"><p>エラー: ${error.message}</p><a href="#" onclick="router.navigate('/')">ログインページへ</a></div>`;
     }
 }
 
