@@ -1,5 +1,5 @@
 /**
- * app.js - 建設業評価システム メインアプリケーション (ルーター起動修正版)
+ * app.js - 建設業評価システム メインアプリケーション (最終版)
  */
 class ConstructionEvaluationApp {
     constructor() {
@@ -7,13 +7,6 @@ class ConstructionEvaluationApp {
         this.initialized = false;
         this.currentUser = null;
         this.currentPage = 'login';
-        this.loadingStates = new Map();
-        this.globalState = {
-            language: 'ja',
-            theme: 'light',
-            isOnline: navigator.onLine,
-            lastActivity: Date.now()
-        };
         
         this.auth = null;
         this.router = null;
@@ -27,7 +20,6 @@ class ConstructionEvaluationApp {
         
         try {
             this.setupGlobalErrorHandler();
-            this.setupOnlineStatusMonitoring();
             
             this.auth = window.authManager;
             await new Promise(resolve => {
@@ -37,10 +29,10 @@ class ConstructionEvaluationApp {
                 });
             });
             
-            await this.initializeModules();
+            this.initializeModules();
             this.setupEventListeners();
             
-            // ★ ルーターを起動し、現在のURLに基づいて最初のページを表示
+            // ルーターを起動し、現在のURLに基づいて最初のページを表示
             if (this.router) {
                 this.router.start();
             }
@@ -54,10 +46,10 @@ class ConstructionEvaluationApp {
         }
     }
     
-    async initializeModules() {
+    initializeModules() {
         if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
         
-        // ★ Routerのインスタンス化の方法を変更
+        // router.jsで定義されたAppRouterクラスからインスタンスを生成
         if (typeof AppRouter !== 'undefined') {
             this.router = new AppRouter();
             window.router = this.router;
@@ -76,8 +68,6 @@ class ConstructionEvaluationApp {
         });
     }
     
-    // ★ showInitialPageは不要になったため削除
-
     async handleLogin(event) {
         const email = document.getElementById('email')?.value;
         const password = document.getElementById('password')?.value;
@@ -104,7 +94,7 @@ class ConstructionEvaluationApp {
         if (!result.success) {
             this.notifications?.show(result.message, 'error');
         }
-        // 成功時の処理はonAuthStateChangedが検知して自動で行う
+        // 成功時の処理はonAuthStateChangedが検知し、routerが自動でページ遷移を行う
     }
 
     setupGlobalErrorHandler() {
@@ -116,11 +106,6 @@ class ConstructionEvaluationApp {
             console.error('Unhandled promise rejection:', event.reason);
             this.notifications?.show('処理中にエラーが発生しました', 'error');
         });
-    }
-
-    setupOnlineStatusMonitoring() {
-        window.addEventListener('online', () => this.notifications?.success('オンラインに復帰しました'));
-        window.addEventListener('offline', () => this.notifications?.warning('オフラインになりました'));
     }
 
     showInitializationError(error) {
