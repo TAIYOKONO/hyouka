@@ -1,5 +1,5 @@
 /**
- * router.js - 建設業評価システム ルーティング管理 (表示モード切替対応版)
+ * router.js - 建設業評価システム ルーティング管理 (最終版)
  */
 class Router {
     constructor() {
@@ -83,7 +83,7 @@ class Router {
 
     async renderComponent(route, params) {
         const functionMap = {
-            login: () => {}, // ログインページはデフォルトで表示
+            login: () => {},
             dashboard: showDashboard,
             evaluations: showEvaluations, 
             newEvaluation: showNewEvaluationForm,
@@ -95,16 +95,13 @@ class Router {
         const pageFunction = functionMap[route.component];
 
         if (typeof pageFunction === 'function') {
-            // 表示モードの切り替え処理
             if (route.component !== 'login' && route.component !== 'register') {
-                // 認証済みページの表示
                 document.body.classList.remove('login-mode');
                 document.body.classList.add('authenticated');
                 document.getElementById('app-header').style.display = 'block';
                 document.getElementById('breadcrumbs').style.display = 'block';
                 if (window.navigation) window.navigation.render();
             } else {
-                // ログイン/登録ページの表示
                 document.body.classList.add('login-mode');
                 document.body.classList.remove('authenticated');
                 document.getElementById('app-header').style.display = 'none';
@@ -117,12 +114,11 @@ class Router {
                 pageFunction();
             }
         } else {
-            document.getElementById('main-content').innerHTML = `<h2>Page not found for component: ${route.component}</h2>`;
+            document.getElementById('main-content').innerHTML = `<h2>Component function not found: ${route.component}</h2>`;
         }
     }
 }
 
-// グローバルにクラスを公開し、app.jsでインスタンス化する
 if (typeof window !== 'undefined') {
     window.AppRouter = Router;
 }
