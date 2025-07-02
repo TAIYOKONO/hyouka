@@ -1,14 +1,9 @@
 /**
- * utils/helpers.js - ヘルパー関数 (Firestore連携・デバッグ版)
+ * utils/helpers.js - ヘルパー関数 (最終版)
  */
-function getCategoryName(index) {
-    const categoryKeys = ['category.safety', 'category.quality', 'category.efficiency', 'category.teamwork', 'category.communication'];
-    return i18n.t(categoryKeys[index]);
-}
-
 function updateBreadcrumbs(items) {
     const breadcrumbs = document.getElementById('breadcrumbs');
-    if (!breadcrumbs || !items.length) return;
+    if (!breadcrumbs || !items || !items.length) return;
     breadcrumbs.innerHTML = items.map((item, index) => 
         index === items.length - 1 ? `<span class="current">${item.label}</span>` : `<a href="#" onclick="router.navigate('${item.path || ''}')">${item.label}</a>`
     ).join(' <span class="separator">></span> ');
@@ -40,8 +35,7 @@ async function handleSaveEvaluation(e) {
     const period = document.getElementById('evaluation-period').value;
     const subordinate = document.getElementById('subordinate-select').value;
     if (!period || !subordinate) {
-        showNotification('評価期間と対象者を選択してください', 'error');
-        return;
+        return showNotification('評価期間と対象者を選択してください', 'error');
     }
     const ratings = {};
     let hasRatings = false;
@@ -55,8 +49,7 @@ async function handleSaveEvaluation(e) {
         }
     });
     if (!hasRatings) {
-        showNotification('少なくとも1つの評価項目を入力してください', 'error');
-        return;
+        return showNotification('少なくとも1つの評価項目を入力してください', 'error');
     }
     const ratingValues = Object.values(ratings);
     const avgRating = ratingValues.reduce((sum, r) => sum + r, 0) / ratingValues.length || 0;
