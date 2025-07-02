@@ -1,5 +1,5 @@
 /**
- * dashboard.js - ダッシュボードページ (Firestore連携版)
+ * dashboard.js - ダッシュボードページ (最終版)
  */
 async function showDashboard() {
     app.currentPage = 'dashboard';
@@ -10,7 +10,7 @@ async function showDashboard() {
 
     try {
         const evaluations = await api.getEvaluations();
-        const evaluationCategories = await api.getEvaluationCategories();
+        const evaluationItems = await api.getEvaluationItems();
 
         const completedEvaluations = evaluations.filter(e => e.status === 'completed');
         const totalRating = completedEvaluations.reduce((sum, e) => sum + e.overallRating, 0);
@@ -24,7 +24,7 @@ async function showDashboard() {
                         <div class="stat-card"><div class="stat-number">${evaluations.length}</div><div class="stat-label">総評価数</div></div>
                         <div class="stat-card"><div class="stat-number">${completedEvaluations.length}</div><div class="stat-label">完了済み</div></div>
                         <div class="stat-card"><div class="stat-number">${averageRating}</div><div class="stat-label">平均評価</div></div>
-                        <div class="stat-card"><div class="stat-number">${evaluationCategories.length}</div><div class="stat-label">評価項目数</div></div>
+                        <div class="stat-card"><div class="stat-number">${evaluationItems.length}</div><div class="stat-label">評価項目数</div></div>
                     </div>
                     <h3>最近の活動</h3>
                     <div class="table-container">
