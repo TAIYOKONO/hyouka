@@ -1,5 +1,5 @@
 /**
- * ナビゲーションシステム (通知機能付き)
+ * ナビゲーションシステム (最終版)
  */
 class NavigationManager {
     constructor() {
@@ -11,7 +11,6 @@ class NavigationManager {
         this.currentUser = authManager.getCurrentUser();
         if (!this.currentUser) return;
         
-        // ★ 未読の通知件数を取得
         const notifications = await api.getNotificationsForUser(this.currentUser.uid);
         const notificationCount = notifications.length;
 
@@ -30,9 +29,7 @@ class NavigationManager {
     }
 
     setupMenuItems(notificationCount = 0) {
-        // ★ ユーザー管理メニューに通知バッジを追加
         const userManagementLabel = `ユーザー管理 ${notificationCount > 0 ? `<span class="notification-badge">${notificationCount}</span>` : ''}`;
-
         this.menuItems = [
             { id: 'dashboard', label: 'ダッシュボード', path: '/dashboard', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'evaluations', label: '評価一覧', path: '/evaluations', roles: ['admin', 'evaluator', 'worker'] },
@@ -41,10 +38,28 @@ class NavigationManager {
         ];
     }
     
-    // 他の関数（renderMenuItems, renderUserInfo, attachEventListeners）は変更なし
-    renderMenuItems() { if (!this.currentUser) return ''; return this.menuItems.filter(item => item.roles.includes(this.currentUser.role)).map(item => `<li><a href="#" class="nav-link" data-path="${item.path}">${item.label}</a></li>`).join(''); }
-    renderUserInfo() { const roleDisplayNames = { admin: '管理者', evaluator: '評価者', worker: '作業員' }; const roleName = roleDisplayNames[this.currentUser.role] || this.currentUser.role; return `<div class="user-info" id="user-info"><div class="user-avatar">${(this.currentUser.name || 'U').charAt(0)}</div><div class="user-details"><div class="user-name">${this.currentUser.name}</div><div class="user-role">${roleName}</div></div><button onclick="logout()" style="margin-left: 12px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ログアウト</button></div>`; }
-    attachEventListeners() { document.querySelectorAll('.nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const path = e.currentTarget.dataset.path; if (path && router) router.navigate(path); }); }); }
-}
+    renderMenuItems() {
+        if (!this.currentUser) return '';
+        return this.menuItems
+            .filter(item => item.roles.includes(this.currentUser.role))
+            .map(item => `<li><a href="#" class="nav-link" data-path="${item.path}">${item.label}</a></li>`)
+            .join('');
+    }
 
+    renderUserInfo() {
+        const roleDisplayNames = { admin: '管理者', evaluator: '評価者', worker: '作業員' };
+        const roleName = roleDisplayNames[this.currentUser.role] || this.currentUser.role;
+        return `<div class="user-info" id="user-info"><div class="user-avatar">${(this.currentUser.name || 'U').charAt(0)}</div><div class="user-details"><div class="user-name">${this.currentUser.name}</div><div class="user-role">${roleName}</div></div><button onclick="logout()" style="margin-left: 12px; background: none; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ログアウト</button></div>`;
+    }
+
+    attachEventListeners() {
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const path = e.currentTarget.dataset.path;
+                if (path && window.router) router.navigate(path);
+            });
+        });
+    }
+}
 window.navigation = new NavigationManager();
