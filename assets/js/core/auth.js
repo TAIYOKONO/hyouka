@@ -1,5 +1,5 @@
 /**
- * auth.js - 建設業評価システム認証管理 (Firebase連携版)
+ * auth.js - 建設業評価システム認証管理 (最終版)
  */
 class AuthManager {
     constructor() {
