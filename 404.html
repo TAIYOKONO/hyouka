@@ -108,7 +108,7 @@
       }
     </script>
     
-    <script src="assets/js/core/i18n.js"></script>
+    <script src="assets/js/core/app.js"></script>
     <script src="assets/js/core/auth.js"></script>
     <script src="assets/js/core/router.js"></script>
     <script src="assets/js/core/api.js"></script>
@@ -121,7 +121,6 @@
     <script src="assets/js/pages/users.js"></script>
     <script src="assets/js/pages/settings.js"></script>
     <script src="assets/js/pages/register.js"></script>
-    <script src="assets/js/core/app.js"></script>
 
     <script>
         // DOM読み込み完了時に初期化
@@ -129,8 +128,11 @@
             console.log('🚀 Building evaluation system started');
             
             try {
+                // アプリケーションのメイン初期化処理を呼び出す
                 window.app.init();
+
             } catch (error) {
+                // 初期化中に致命的なエラーが発生した場合
                 console.error('⚠️ App initialization failed:', error);
                 
                 const mainContent = document.getElementById('main-content');
