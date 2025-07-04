@@ -19,8 +19,11 @@ class ConstructionEvaluationApp {
         console.log('🚀 Initializing Construction Evaluation System v' + this.version);
         
         try {
-            this.setupGlobalErrorHandler();
-            
+            // 認証より先にモジュールを初期化
+            this.initializeModules();
+            this.setupEventListeners();
+
+            // 認証状態の監視を開始し、完了を待つ
             this.auth = window.authManager;
             await new Promise(resolve => {
                 this.auth.init((user) => {
@@ -29,13 +32,8 @@ class ConstructionEvaluationApp {
                 });
             });
             
-            this.initializeModules();
-            this.setupEventListeners();
-            
-            // ルーターを起動し、現在のURLに基づいて最初のページを表示
-            if (this.router) {
-                this.router.start();
-            }
+            // 認証状態が確定してから、ルーターが自身の力で最初のページを表示する
+            // app.jsからの明示的な呼び出しは不要
             
             this.initialized = true;
             console.log('✅ Construction Evaluation System initialized successfully');
@@ -47,14 +45,13 @@ class ConstructionEvaluationApp {
     }
     
     initializeModules() {
-        if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
-        
-        // router.jsで定義されたAppRouterクラスからインスタンスを生成
+        // routerのインスタンス化を先に行う
         if (typeof AppRouter !== 'undefined') {
             this.router = new AppRouter();
             window.router = this.router;
         }
 
+        if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
         if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
         if (typeof navigation !== 'undefined') this.navigation = navigation;
     }
@@ -94,18 +91,7 @@ class ConstructionEvaluationApp {
         if (!result.success) {
             this.notifications?.show(result.message, 'error');
         }
-        // 成功時の処理はonAuthStateChangedが検知し、routerが自動でページ遷移を行う
-    }
-
-    setupGlobalErrorHandler() {
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-            this.notifications?.show('予期しないエラーが発生しました', 'error');
-        });
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            this.notifications?.show('処理中にエラーが発生しました', 'error');
-        });
+        // 成功時のページ遷移はonAuthStateChangedとrouterが自動で行う
     }
 
     showInitializationError(error) {
