@@ -1,21 +1,20 @@
 /**
- * router.js - 建設業評価システム ルーティング管理 (最終版)
+ * router.js - 建設業評価システム ルーティング管理 (ハッシュモード版)
  */
 class Router {
     constructor() {
         this.routes = new Map();
-        this.basePath = window.location.pathname.replace(/(\/index\.html|\/404\.html|\/)$/, '');
         this.setupRoutes();
-        window.addEventListener('popstate', () => this.handleLocationChange());
-    }
-
-    start() {
-        this.handleLocationChange();
+        
+        // URLのハッシュ部分が変わった時に検知する
+        window.addEventListener('hashchange', () => this.handleLocationChange());
+        // ページ初回読み込み時に現在のハッシュを処理する
+        window.addEventListener('load', () => this.handleLocationChange());
     }
 
     handleLocationChange() {
-        const path = window.location.pathname.substring(this.basePath.length) || '/';
-        this.navigate(path, false);
+        const path = window.location.hash.slice(1) || '/'; // ハッシュ部分を取得
+        this.navigate(path, false); // 履歴には追加しない
     }
     
     setupRoutes() {
@@ -33,29 +32,26 @@ class Router {
         this.routes.set(path, { path, ...config });
     }
     
-    async navigate(path, pushState = true) {
+    async navigate(path, pushToHistory = true) {
         const route = this.findRoute(path);
         if (!route) return this.navigate('/dashboard');
 
         if (route.requireAuth && !authManager.isAuthenticated()) {
-            return this.navigate('/', false);
+            return this.navigate('/');
         }
-
         if (!route.requireAuth && authManager.isAuthenticated() && path !== '/dashboard') {
-            return this.navigate('/dashboard', true);
+            return this.navigate('/dashboard');
         }
-
         if (route.permission && !authManager.hasPermission(route.permission)) {
             showNotification('このページにアクセスする権限がありません', 'error');
-            return this.navigate('/dashboard', false);
+            return this.navigate('/dashboard');
         }
         
-        if (pushState) {
-            const newPath = path === '/' ? this.basePath + '/' : this.basePath + path;
-            window.history.pushState({ route: path }, '', newPath);
+        // URLのハッシュを更新
+        if (pushToHistory) {
+            window.location.hash = path;
         }
         
-        this.currentRoute = path;
         await this.renderComponent(route, this.extractParams(path, route.path));
     }
     
@@ -99,13 +95,11 @@ class Router {
                 document.body.classList.remove('login-mode');
                 document.body.classList.add('authenticated');
                 document.getElementById('app-header').style.display = 'block';
-                document.getElementById('breadcrumbs').style.display = 'block';
                 if (window.navigation) window.navigation.render();
             } else {
                 document.body.classList.add('login-mode');
                 document.body.classList.remove('authenticated');
                 document.getElementById('app-header').style.display = 'none';
-                document.getElementById('breadcrumbs').style.display = 'none';
             }
 
             if (route.component === 'evaluationDetail' && params.id) {
@@ -114,11 +108,12 @@ class Router {
                 pageFunction();
             }
         } else {
-            document.getElementById('main-content').innerHTML = `<h2>Component function not found: ${route.component}</h2>`;
+            document.getElementById('main-content').innerHTML = `<h2>Page not found</h2>`;
         }
     }
 }
 
+// app.jsでインスタンス化するため、AppRouterとして公開
 if (typeof window !== 'undefined') {
     window.AppRouter = Router;
 }
