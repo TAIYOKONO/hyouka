@@ -2,11 +2,74 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>CSS Loading Test</title>
-    <link rel="stylesheet" href="/hyouka/assets/css/main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建設業評価システム</title>
+    <base href="/hyouka/">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+    
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body class="test-background">
-    <h1>CSSロードテスト</h1>
-    <p>このページの背景が水色に変わっていれば、CSSの読み込みは成功しています。</p>
+<body class="login-mode">
+    <div class="app-container">
+        <header id="app-header" class="app-header" style="display: none;"></header>
+        <main id="main-content" class="main-content">
+            <div class="login-page">
+                <div class="login-container">
+                    <div class="login-header">
+                        <h1 id="login-title">🏗️ 建設業評価システム</h1>
+                        <p id="login-subtitle">システムにログインしてください</p>
+                    </div>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="email" id="email-label">メールアドレス</label>
+                            <input type="email" id="email" name="email" value="admin@company.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password" id="password-label">パスワード</label>
+                            <input type="password" id="password" name="password" value="password123" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">ログイン</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+        <footer class="app-footer">
+            <p>&copy; 2025 建設業評価システム. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
+        authDomain: "hyouka-db.firebaseapp.com",
+        projectId: "hyouka-db",
+        storageBucket: "hyouka-db.appspot.com",
+        messagingSenderId: "861016804589",
+        appId: "1:861016804589:web:d911d516d6c79aa73690e4"
+      };
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    </script>
+    <script src="assets/js/core/app.js"></script>
+    <script src="assets/js/core/auth.js"></script>
+    <script src="assets/js/core/router.js"></script>
+    <script src="assets/js/core/api.js"></script>
+    <script src="assets/js/components/pentagon-chart.js"></script>
+    <script src="assets/js/components/notification.js"></script>
+    <script src="assets/js/components/navigation.js"></script>
+    <script src="assets/js/utils/helpers.js"></script>
+    <script src="assets/js/pages/dashboard.js"></script>
+    <script src="assets/js/pages/evaluations.js"></script>
+    <script src="assets/js/pages/users.js"></script>
+    <script src="assets/js/pages/settings.js"></script>
+    <script src="assets/js/pages/register.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            window.app.init();
+        });
+    </script>
 </body>
 </html>
