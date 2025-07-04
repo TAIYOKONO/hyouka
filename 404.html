@@ -2,150 +2,19 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>建設業評価システム</title>
-    <base href="/hyouka/">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+    <title>CSS Loading Test</title>
     
-    <link rel="stylesheet" href="assets/css/variables.css">
+    <base href="/hyouka/">
+
     <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
-<body class="login-mode">
-    <div class="app-container">
-        <header id="app-header" class="app-header" style="display: none;">
-            <div class="header-content">
-                <div class="logo">
-                    <h1 id="header-title">🏗️ 建設業評価システム</h1>
-                </div>
-                <nav>
-                    <ul class="nav-menu" id="nav-menu"></ul>
-                </nav>
-                <div class="user-menu">
-                    <div class="user-info" id="user-info"></div>
-                    <div class="language-selector">
-                        <select id="header-language-select">
-                            <option value="ja">🇯🇵 日本語</option>
-                            <option value="vi">🇻🇳 Tiếng Việt</option>
-                            <option value="en">🇺🇸 English</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </header>
+<body>
 
-        <div id="breadcrumbs" class="breadcrumbs" style="display: none;"></div>
-
-        <main id="main-content" class="main-content">
-            <div class="login-page">
-                <div class="login-container">
-                    <div class="login-header">
-                        <h1 id="login-title">🏗️ 建設業評価システム</h1>
-                        <p id="login-subtitle">システムにログインしてください</p>
-                        <div style="margin-top: 16px;">
-                            <select id="login-language-select" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                                <option value="ja">🇯🇵 日本語</option>
-                                <option value="vi">🇻🇳 Tiếng Việt</option>
-                                <option value="en">🇺🇸 English</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label for="email" id="email-label">メールアドレス</label>
-                            <input type="email" id="email" name="email" value="admin@company.com" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="password" id="password-label">パスワード</label>
-                            <input type="password" id="password" name="password" value="password123" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">
-                            ログイン
-                        </button>
-                    </form>
-                    
-                    <div class="demo-info">
-                        <strong id="demo-title">🚀 デモアカウント</strong>
-                        <div class="demo-accounts">
-                            <div class="demo-account">
-                                <strong>管理者:</strong> admin@company.com / password123
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <footer class="app-footer">
-            <p>&copy; 2025 建設業評価システム. All rights reserved.</p>
-        </footer>
+    <div class="page-content" style="padding: 40px;">
+        <h1 class="page-title" style="font-size: 2rem; margin-bottom: 1rem;">CSSロードテスト</h1>
+        <p>このページに青色や中央揃えなどのスタイルが適用されていれば、CSSの読み込み自体は正常です。</p>
+        <p>もしスタイルが適用されていない（黒文字で左揃えのままなど）場合は、リポジトリの構成かGitHub Pagesのキャッシュに問題がある可能性が高いです。</p>
     </div>
 
-    <div id="notification-container"></div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
-    <script>
-      // ご自身のFirebaseプロジェクトの構成情報
-      const firebaseConfig = {
-        apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
-        authDomain: "hyouka-db.firebaseapp.com",
-        projectId: "hyouka-db",
-        storageBucket: "hyouka-db.appspot.com",
-        messagingSenderId: "861016804589",
-        appId: "1:861016804589:web:d911d516d6c79aa73690e4"
-      };
-
-      // Firebaseを初期化
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-    </script>
-    
-    <script src="/hyouka/assets/js/core/app.js"></script>
-    <script src="/hyouka/assets/js/core/auth.js"></script>
-    <script src="/hyouka/assets/js/core/router.js"></script>
-    <script src="/hyouka/assets/js/core/api.js"></script>
-    <script src="/hyouka/assets/js/components/pentagon-chart.js"></script>
-    <script src="/hyouka/assets/js/components/notification.js"></script>
-    <script src="/hyouka/assets/js/components/navigation.js"></script>
-    <script src="/hyouka/assets/js/utils/helpers.js"></script>
-    <script src="/hyouka/assets/js/pages/dashboard.js"></script>
-    <script src="/hyouka/assets/js/pages/evaluations.js"></script>
-    <script src="/hyouka/assets/js/pages/users.js"></script>
-    <script src="/hyouka/assets/js/pages/settings.js"></script>
-    <script src="/hyouka/assets/js/pages/register.js"></script>
-
-    <script>
-        // DOM読み込み完了時に初期化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Building evaluation system started');
-            
-            try {
-                window.app.init();
-            } catch (error) {
-                console.error('⚠️ App initialization failed:', error);
-                
-                const mainContent = document.getElementById('main-content');
-                if (mainContent) {
-                    mainContent.innerHTML = `
-                        <div style="padding: 40px; text-align: center; color: #721c24; background: #f8d7da; border-radius: 8px;">
-                            <h2>システムエラー</h2>
-                            <p>アプリケーションの起動に失敗しました。</p>
-                            <p>開発者コンソールで詳細なエラー内容を確認してください。</p>
-                        </div>
-                    `;
-                }
-            }
-            
-            console.log('✅ Building evaluation system ready');
-        });
-    </script>
 </body>
 </html>
