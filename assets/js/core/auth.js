@@ -16,13 +16,14 @@ class AuthManager {
 
     init(onAuthStateChangedCallback) {
         this.auth.onAuthStateChanged(async (user) => {
+            const wasAuthenticated = this.isAuthenticated();
+
             if (user) {
                 const userDoc = await this.db.collection('users').doc(user.uid).get();
                 if (userDoc.exists) {
                     this.currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
                     this.userRole = this.currentUser.role;
                 } else {
-                    console.warn(`User data not found in Firestore for UID: ${user.uid}. Logging out.`);
                     this.logout();
                     return;
                 }
@@ -30,6 +31,14 @@ class AuthManager {
                 this.currentUser = null;
                 this.userRole = null;
             }
+
+            // ★★★ ここからページ遷移のロジックを追加 ★★★
+            // 状態が「未ログイン」→「ログイン」に変わった瞬間
+            if (!wasAuthenticated && this.isAuthenticated()) {
+                if(window.router) router.navigate('/dashboard');
+            }
+            // ★★★ ここまで追加 ★★★
+
             if (typeof onAuthStateChangedCallback === 'function') {
                 onAuthStateChangedCallback(this.currentUser);
             }
@@ -53,7 +62,11 @@ class AuthManager {
 
     logout() {
         this.auth.signOut().then(() => {
-            window.location.replace('/');
+            if(window.router) {
+                router.navigate('/');
+            } else {
+                window.location.replace('/');
+            }
         });
     }
 
