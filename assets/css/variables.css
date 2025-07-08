@@ -2,34 +2,34 @@
  * CSS Variables - 建設業評価システム
  */
 :root {
-  /* プライマリーカラー（青系） */
+  /* プライマリーカラー */
   --color-primary: #244EFF;
-  --color-primary-light: #5C77FF;
   --color-primary-dark: #0133D8;
   --color-primary-100: rgba(36, 78, 255, 0.1);
 
-  /* セカンダリーカラー（濃紺） */
+  /* セカンダリーカラー */
   --color-secondary: #001350;
-  
+
   /* 背景カラー */
   --color-background: #F1F4FF;
   --color-background-card: #FFFFFF;
-  
+  --color-background-secondary: #F9FAFC;
+
   /* テキストカラー */
   --color-text-primary: #333333;
-  --color-text-secondary: #666666;
+  --color-text-secondary: #6B7280;
   --color-white: #FFFFFF;
 
   /* ボーダー */
   --border-color: #DDDDDD;
   --card-border-color: #EAEAEA;
-  
+  --card-border-radius: 8px;
+
   /* レイアウト */
   --container-max-width: 1200px;
   --navbar-height: 60px;
 
   /* スペーシング */
-  --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
@@ -47,9 +47,6 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* ボーダー半径 */
-  --card-border-radius: 8px;
-
   /* シャドウ */
-  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
