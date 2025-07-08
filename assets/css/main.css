@@ -141,7 +141,7 @@ nav {
 .page-header {
     padding: var(--spacing-lg) var(--spacing-xl);
     border-bottom: 1px solid var(--border-color);
-    display: flex;
+    display: flex;ディスプレイ：Flex;
     justify-content: space-between;
     align-items: center;
 }
