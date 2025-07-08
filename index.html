@@ -9,14 +9,10 @@
     
     <link rel="stylesheet" href="assets/css/variables.css">
     <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="assets/css/components.css">
-    <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 <body class="login-mode">
     <div class="app-container">
         <header id="app-header" class="app-header" style="display: none;"></header>
-
-        <div id="breadcrumbs" class="breadcrumbs" style="display: none;"></div>
 
         <main id="main-content" class="main-content">
             <div class="login-page">
@@ -48,7 +44,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
@@ -60,7 +55,6 @@
       };
       if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     </script>
-    
     <script src="assets/js/core/app.js"></script>
     <script src="assets/js/core/auth.js"></script>
     <script src="assets/js/core/router.js"></script>
@@ -74,7 +68,6 @@
     <script src="assets/js/pages/users.js"></script>
     <script src="assets/js/pages/settings.js"></script>
     <script src="assets/js/pages/register.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             try {
