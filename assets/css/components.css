@@ -1,730 +1,199 @@
 /**
- * components.css - 建設業評価システムコンポーネント専用スタイル
- * 新トンマナ適用版
+ * components.css - コンポーネント専用スタイル
  */
-
-/* === 評価フォーム === */
-.evaluation-form {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.form-section {
-    margin-bottom: 2rem;
-    padding: var(--card-padding);
-    border: 1px solid var(--card-border-color);
-    border-radius: var(--card-border-radius);
-    background: var(--color-white);
-    box-shadow: var(--shadow-sm);
-}
-
-.form-section h3 {
-    color: var(--color-primary);
-    margin-bottom: var(--spacing-md);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-}
-
-/* === 評価チャート === */
-.evaluation-chart {
-    background: var(--chart-bg);
-    padding: var(--card-padding);
-    border-radius: var(--card-border-radius);
-    box-shadow: var(--card-shadow);
-    margin-bottom: var(--spacing-xl);
-    border: 1px solid var(--card-border-color);
-}
-
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-/* === 自作五角形チャート === */
-.pentagon-chart {
-    width: 300px;
-    height: 300px;
-    margin: 0 auto;
-    position: relative;
-    background: var(--chart-bg);
-    border-radius: var(--border-radius);
-}
-
-.pentagon-chart svg {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 2px 4px rgba(36, 78, 255, 0.1));
-}
-
-.pentagon-grid {
-    fill: none;
-    stroke: var(--chart-grid-color);
-    stroke-width: 1;
-    opacity: 0.7;
-}
-
-.pentagon-data {
-    fill: var(--chart-primary-fill);
-    stroke: var(--chart-primary-color);
-    stroke-width: 2.5;
-    filter: drop-shadow(0 2px 4px rgba(36, 78, 255, 0.15));
-}
-
-.pentagon-point {
-    fill: var(--chart-point-color);
-    stroke: var(--color-white);
-    stroke-width: 2;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
-.pentagon-point:hover {
-    fill: var(--color-primary-dark);
-    r: 5;
-    transition: var(--transition-fast);
-}
-
-.pentagon-label {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    fill: var(--chart-text-color);
-    text-anchor: middle;
-    dominant-baseline: middle;
-}
-
-/* === 評価入力コンポーネント === */
-.rating-input-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.rating-input-item {
-    display: flex;
+.btn {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    padding: var(--spacing-md);
-    background: var(--color-background);
-    border-radius: var(--border-radius-md);
-    border: 2px solid var(--border-color);
-    transition: var(--transition-base);
-}
-
-.rating-input-item:focus-within {
-    border-color: var(--color-primary);
-    background: var(--color-primary-50);
-    box-shadow: var(--shadow-primary);
-}
-
-.rating-input-item:hover {
-    border-color: var(--color-primary-light);
-    background: var(--color-background-secondary);
-}
-
-.rating-input-label {
-    flex: 1;
-    margin-right: var(--spacing-md);
-}
-
-.rating-input-label strong {
-    display: block;
-    color: var(--color-primary);
-    margin-bottom: 4px;
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-base);
-}
-
-.rating-input-label small {
-    color: var(--color-text-secondary);
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-relaxed);
-}
-
-.rating-input-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.rating-input {
-    width: 80px;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border: 2px solid var(--input-border-color);
-    border-radius: var(--border-radius);
-    text-align: center;
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-primary);
-    background: var(--color-white);
-    transition: var(--transition-base);
-}
-
-.rating-input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: var(--input-focus-box-shadow);
-}
-
-.rating-input:invalid {
-    border-color: var(--color-danger);
-}
-
-.rating-display {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    min-width: 80px;
-    text-align: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
     font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s;
 }
 
-/* === 評価詳細表示 === */
-.evaluation-summary {
-    display: grid;
-    grid-template-columns: 1fr 400px;
-    gap: 2rem;
-    margin-bottom: 2rem;
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
 }
 
-.evaluation-details {
-    background: var(--color-background);
-    padding: var(--card-padding);
+.btn-secondary {
+    background-color: #6c757d;
+    color: var(--color-white);
+}
+
+.btn-success {
+    background-color: #198754;
+    color: var(--color-white);
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: var(--color-white);
+}
+
+.btn:hover {
+    opacity: 0.85;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: var(--font-weight-semibold);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.table-container {
+    background: var(--color-white);
     border-radius: var(--card-border-radius);
-    border: 1px solid var(--card-border-color);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
 }
 
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--spacing-xs) 0;
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
 
-.detail-row:last-child {
+.table th {
+    background: var(--color-background-secondary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.table tr:last-child td {
     border-bottom: none;
 }
 
-.detail-label {
-    font-weight: var(--font-weight-medium);
+.table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background: var(--color-white);
+    padding: var(--spacing-lg);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+.stat-label {
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
+    margin-top: 0.5rem;
 }
 
-.detail-value {
-    color: var(--color-primary);
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-sm);
-}
-
-/* === モーダル === */
+/* --- 招待モーダル --- */
 .modal {
+    display: none;
     position: fixed;
-    top: 0;
+    z-index: 1050;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: var(--modal-backdrop-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-index-modal);
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--transition-base);
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
 }
 
 .modal.show {
-    opacity: 1;
-    visibility: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-content {
-    background: var(--modal-content-bg);
-    border-radius: var(--modal-content-border-radius);
-    box-shadow: var(--shadow-xl);
-    max-width: 600px;
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
     width: 90%;
-    max-height: 90vh;
-    overflow: auto;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
-    background: var(--modal-header-bg);
-    color: var(--modal-header-color);
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-radius: var(--modal-content-border-radius) var(--modal-content-border-radius) 0 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid #ddd;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .modal-title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
     margin: 0;
+    font-size: 1.25rem;
 }
 
 .modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
     background: none;
     border: none;
-    color: var(--modal-header-color);
-    font-size: var(--font-size-xl);
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: var(--transition-base);
 }
 
 .modal-close:hover {
-    background: rgba(255, 255, 255, 0.1);
+    color: black;
 }
 
 .modal-body {
-    padding: var(--spacing-lg);
+    padding: 16px;
 }
 
-.modal-footer {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-}
-
-/* === プログレスバー === */
-.progress {
-    width: 100%;
-    height: var(--progress-height);
-    background: var(--progress-bg);
-    border-radius: var(--progress-border-radius);
-    overflow: hidden;
-    margin: var(--spacing-sm) 0;
-}
-
-.progress-bar {
-    height: 100%;
-    background: var(--progress-bar-bg);
-    border-radius: var(--progress-border-radius);
-    transition: width var(--transition-base);
-    position: relative;
-}
-
-.progress-bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-        45deg,
-        transparent 35%,
-        rgba(255, 255, 255, 0.2) 35%,
-        rgba(255, 255, 255, 0.2) 65%,
-        transparent 65%
-    );
-    background-size: 10px 10px;
-    animation: progress-stripes 1s linear infinite;
-}
-
-@keyframes progress-stripes {
-    0% { background-position: 0 0; }
-    100% { background-position: 10px 0; }
-}
-
-/* === ローディングスピナー === */
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--spinner-secondary-color);
-    border-top: 4px solid var(--spinner-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: var(--spacing-md) auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--loading-overlay-bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: var(--z-index-modal-backdrop);
-}
-
-.loading-text {
-    margin-top: var(--spacing-md);
-    color: var(--color-text-primary);
-    font-weight: var(--font-weight-medium);
-}
-
-/* === バッジ === */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-}
-
-.badge-primary {
-    background: var(--color-primary-100);
-    color: var(--color-primary-dark);
-}
-
-.badge-success {
-    background: var(--color-success-100);
-    color: var(--color-success-dark);
-}
-
-.badge-warning {
-    background: var(--color-warning-100);
-    color: var(--color-warning-dark);
-}
-
-.badge-danger {
-    background: var(--color-danger-100);
-    color: var(--color-danger-dark);
-}
-
-/* === アラート === */
-.alert {
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    border: 1px solid transparent;
-    margin-bottom: var(--spacing-md);
-}
-
-.alert-success {
-    background: var(--color-success-50);
-    border-color: var(--color-success-200);
-    color: var(--color-success-dark);
-}
-
-.alert-warning {
-    background: var(--color-warning-50);
-    border-color: var(--color-warning-200);
-    color: var(--color-warning-dark);
-}
-
-.alert-danger {
-    background: var(--color-danger-50);
-    border-color: var(--color-danger-200);
-    color: var(--color-danger-dark);
-}
-
-.alert-info {
-    background: var(--color-primary-50);
-    border-color: var(--color-primary-200);
-    color: var(--color-primary-dark);
-}
-
-/* === カードアクション === */
-.card-actions {
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-    background: var(--color-background);
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-}
-
-/* === 空状態 === */
-.empty-state {
-    text-align: center;
-    padding: var(--spacing-xxl);
-    color: var(--color-text-secondary);
-}
-
-.empty-state-icon {
-    font-size: 3rem;
-    margin-bottom: var(--spacing-md);
-    opacity: 0.5;
-}
-
-.empty-state-title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--spacing-sm);
-    color: var(--color-text-primary);
-}
-
-.empty-state-description {
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--spacing-lg);
-}
-
-/* === ツールチップ === */
-.tooltip {
-    position: relative;
+/* --- 通知バッジ --- */
+.notification-badge {
     display: inline-block;
-}
-
-.tooltip-content {
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--color-gray-800);
-    color: var(--color-white);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    white-space: nowrap;
-    z-index: var(--z-index-tooltip);
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--transition-fast);
-}
-
-.tooltip:hover .tooltip-content {
-    opacity: 1;
-    visibility: visible;
-}
-
-.tooltip-content::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: var(--color-gray-800);
-}
-
-/* === ドロップダウン === */
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdown-content {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: var(--color-white);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    z-index: var(--z-index-dropdown);
-    min-width: 200px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: var(--transition-fast);
-}
-
-.dropdown.show .dropdown-content {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.dropdown-item {
-    display: block;
-    padding: var(--spacing-sm) var(--spacing-md);
-    color: var(--color-text-primary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    transition: var(--transition-fast);
-}
-
-.dropdown-item:hover {
-    background: var(--color-primary-50);
-    color: var(--color-primary);
-}
-
-.dropdown-divider {
-    height: 1px;
-    background: var(--border-color);
-    margin: var(--spacing-xs) 0;
-}
-
-/* === タブ === */
-.tabs {
-    border-bottom: 2px solid var(--border-color);
-    margin-bottom: var(--spacing-lg);
-}
-
-.tab-list {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.tab-item {
-    margin-right: var(--spacing-lg);
-}
-
-.tab-link {
-    display: block;
-    padding: var(--spacing-sm) var(--spacing-md);
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    border-bottom: 2px solid transparent;
-    transition: var(--transition-base);
-}
-
-.tab-link:hover {
-    color: var(--color-primary);
-}
-
-.tab-link.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-}
-
-.tab-content {
-    display: none;
-}
-
-.tab-content.active {
-    display: block;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* === 建設業界専用コンポーネント === */
-
-/* 安全レベル表示 */
-.safety-level {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-}
-
-.safety-level-safe {
-    background: var(--color-success-100);
-    color: var(--color-success-dark);
-}
-
-.safety-level-caution {
-    background: var(--color-warning-100);
-    color: var(--color-warning-dark);
-}
-
-.safety-level-danger {
-    background: var(--color-danger-100);
-    color: var(--color-danger-dark);
-}
-
-/* 評価レベル表示 */
-.evaluation-level {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: 6px 12px;
-    border-radius: var(--border-radius);
-    font-weight: var(--font-weight-semibold);
-}
-
-.evaluation-level-5 {
-    background: var(--color-evaluation-excellent);
-    color: var(--color-white);
-}
-
-.evaluation-level-4 {
-    background: #4ECE85;
-    color: var(--color-white);
-}
-
-.evaluation-level-3 {
-    background: var(--color-evaluation-average);
-    color: var(--color-white);
-}
-
-.evaluation-level-2 {
-    background: #FF8C42;
-    color: var(--color-white);
-}
-
-.evaluation-level-1 {
-    background: var(--color-evaluation-critical);
-    color: var(--color-white);
-}
-
-/* 技能実習生向けヘルプカード */
-.trainee-help-card {
-    background: linear-gradient(135deg, var(--color-trainee-highlight), var(--color-trainee-progress));
-    color: var(--color-white);
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius-lg);
-    margin-bottom: var(--spacing-lg);
-    box-shadow: var(--shadow-md);
-}
-
-.trainee-help-title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    margin-bottom: var(--spacing-sm);
-}
-
-.trainee-help-content {
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-relaxed);
-}
-
-/* 作業ステータス表示 */
-.work-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    padding: 4px 12px;
-    border-radius: var(--border-radius-xl);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    text-transform: uppercase;
-}
-
-.work-status-completed {
-    background: var(--color-status-completed);
-    color: var(--color-white);
-}
-
-.work-status-in-progress {
-    background: var(--color-status-in-progress);
-    color: var(--color-white);
-}
-
-.work-status-pending {
-    background: var(--color-status-pending);
-    color: var(--color-white);
-}
-
-.work-status-not-started {
-    background: var(--color-status-not-started);
-    color: var(--color-white);
-}
-
-.work-status-on-hold {
-    background: var(--color-status-on-hold);
-    color: var(--color-white);
+    padding: 2px 6px;
+    font-size: 10px;
+    line-height: 1;
+    color: #fff;
+    background-color: #dc3545;
+    border-radius: 10px;
+    margin-left: 4px;
 }
