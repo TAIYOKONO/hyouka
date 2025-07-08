@@ -1,10 +1,10 @@
 /**
- * users.js - ユーザー管理ページ (最終版)
+ * users.js - ユーザー管理ページ (招待モーダル・承認機能付き)
  */
 async function showUsers() {
     app.currentPage = 'users';
-    if (!authManager.hasPermission('manage_users')) {
-        showNotification('ユーザー管理の権限がありません', 'error');
+    if (!authManager.hasPermission('manage_users') && !authManager.hasPermission('view_subordinate_evaluations')) {
+        showNotification('このページにアクセスする権限がありません', 'error');
         return router.navigate('/dashboard');
     }
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: 'ユーザー管理' }]);
@@ -42,11 +42,23 @@ async function showUsers() {
             </div>
             <div id="invite-modal" class="modal">
                 <div class="modal-content">
-                    <div class="modal-header"><h3 class="modal-title">ユーザー招待</h3><button class="modal-close" onclick="closeInviteModal()">&times;</button></div>
+                    <div class="modal-header">
+                        <h3 class="modal-title">ユーザーを招待</h3>
+                        <button class="modal-close" onclick="closeInviteModal()">&times;</button>
+                    </div>
                     <div class="modal-body">
-                        <div class="form-group"><label for="invite-role">招待する役割</label><select id="invite-role"><option value="worker">作業員</option><option value="evaluator">評価者</option></select></div>
+                        <div class="form-group">
+                            <label for="invite-role">招待する役割を選択</label>
+                            <select id="invite-role">
+                                <option value="worker">作業員</option>
+                                <option value="evaluator">評価者</option>
+                            </select>
+                        </div>
                         <button class="btn btn-primary" onclick="handleCreateInvitationLink()">招待リンクを作成</button>
-                        <div id="invite-link-area" style="display:none; margin-top: 1rem;"><p>リンクをコピーして招待したい方に送ってください。</p><input type="text" id="invite-link-input" readonly style="width: 100%; padding: 0.5rem;"></div>
+                        <div id="invite-link-area" style="display:none; margin-top: 1rem;">
+                            <p>以下のリンクをコピーして、招待したい方に送ってください。</p>
+                            <input type="text" id="invite-link-input" readonly style="width: 100%; padding: 0.5rem; background: #eee;">
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -64,14 +76,20 @@ function renderPendingUsersSection(pendingUsers) {
         if (currentUser.role === 'evaluator' && pendingUser.role === 'worker') return true;
         return false;
     });
+
     if (usersToApprove.length === 0) return '<h3>承認待ちのユーザーはいません</h3>';
+
     return `
         <h3>承認待ちのユーザー</h3>
-        <div class="table-container mb-5">
+        <div class="table-container" style="margin-bottom: 2rem;">
             <table class="table">
                 <thead><tr><th>名前</th><th>メールアドレス</th><th>希望役職</th><th>操作</th></tr></thead>
                 <tbody>
-                    ${usersToApprove.map(user => `<tr><td>${user.name}</td><td>${user.email}</td><td>${user.role}</td><td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td></tr>`).join('')}
+                    ${usersToApprove.map(user => `
+                        <tr>
+                            <td>${user.name}</td><td>${user.email}</td><td>${user.role}</td>
+                            <td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td>
+                        </tr>`).join('')}
                 </tbody>
             </table>
         </div>`;
@@ -79,20 +97,18 @@ function renderPendingUsersSection(pendingUsers) {
 
 function showInviteUserModal() {
     const modal = document.getElementById('invite-modal');
-    if(modal) modal.classList.add('show');
+    if (modal) modal.classList.add('show');
 }
 function closeInviteModal() {
     const modal = document.getElementById('invite-modal');
-    if(modal) modal.classList.remove('show');
-    const linkArea = document.getElementById('invite-link-area');
-    if(linkArea) linkArea.style.display = 'none';
+    if (modal) modal.classList.remove('show');
 }
 
 async function handleCreateInvitationLink() {
     const role = document.getElementById('invite-role').value;
     try {
         const invitationId = await api.createInvitation({ role });
-        const registrationUrl = `${window.location.origin}${window.location.pathname}#/register?token=${invitationId}`;
+        const registrationUrl = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '')}#register?token=${invitationId}`;
         document.getElementById('invite-link-input').value = registrationUrl;
         document.getElementById('invite-link-area').style.display = 'block';
     } catch (error) {
@@ -105,9 +121,11 @@ async function handleApproveUser(userId, userName) {
     const pendingUsers = await api.getPendingUsers();
     const targetUser = pendingUsers.find(u => u.id === userId);
     if (!targetUser) return showNotification('対象ユーザーが見つかりません', 'error');
+
     if (targetUser.role === 'admin' && currentUser.email !== 't.kono@branu.jp') {
         return showNotification('管理者アカウントを承認する権限がありません。', 'error');
     }
+
     if (confirm(`${userName}さんを承認しますか？`)) {
         try {
             await api.approveUser(userId, targetUser.role);
