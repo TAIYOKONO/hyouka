@@ -1,5 +1,5 @@
 /**
- * utils/helpers.js - ヘルパー関数 (最終版)
+ * utils/helpers.js - ヘルパー関数 (評価項目タイプ分離版)
  */
 function updateBreadcrumbs(items) {
     const breadcrumbs = document.getElementById('breadcrumbs');
@@ -13,7 +13,8 @@ function updateRadarChart() {
     if (!window.pentagonChart) return;
     const categories = window.pentagonChart.categories || [];
     const newData = categories.map(category => {
-        const input = document.getElementById(`rating-${category.id}`);
+        // name属性を使って正しいinput要素を特定する
+        const input = document.querySelector(`input[name="rating-${category.id}"]`);
         const value = parseFloat(input?.value);
         return isNaN(value) ? 0 : Math.max(0, Math.min(5, value));
     });
@@ -23,6 +24,10 @@ function updateRadarChart() {
 function initializeRadarChart(categories = []) {
     setTimeout(() => {
         try {
+            // チャートを初期化する前に、既存のチャートがあれば破棄する
+            if (window.pentagonChart && typeof window.pentagonChart.destroy === 'function') {
+                window.pentagonChart.destroy();
+            }
             window.pentagonChart = new PentagonChart('evaluation-radar-chart', categories);
         } catch (error) {
             console.error('Error creating pentagon chart:', error);
@@ -39,15 +44,18 @@ async function handleSaveEvaluation(e) {
     }
     const ratings = {};
     let hasRatings = false;
-    const categories = window.pentagonChart.categories || [];
-    categories.forEach(category => {
-        const input = document.getElementById(`rating-${category.id}`);
+    
+    // すべての評価項目（定量的・定性的）から値を取得
+    const ratingInputs = document.querySelectorAll('.rating-input');
+    ratingInputs.forEach(input => {
         const value = parseFloat(input.value);
         if (!isNaN(value) && value >= 1 && value <= 5) {
-            ratings[category.id] = value;
+            const itemId = input.name.replace('rating-', '');
+            ratings[itemId] = value;
             hasRatings = true;
         }
     });
+
     if (!hasRatings) {
         return showNotification('少なくとも1つの評価項目を入力してください', 'error');
     }
