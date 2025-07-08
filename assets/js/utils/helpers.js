@@ -1,5 +1,5 @@
 /**
- * utils/helpers.js - ヘルパー関数 (評価項目タイプ分離版)
+ * utils/helpers.js - ヘルパー関数 (多角形チャート対応版)
  */
 function updateBreadcrumbs(items) {
     const breadcrumbs = document.getElementById('breadcrumbs');
@@ -9,28 +9,26 @@ function updateBreadcrumbs(items) {
     ).join(' <span class="separator">></span> ');
 }
 
-function updateRadarChart() {
-    if (!window.pentagonChart) return;
-    const categories = window.pentagonChart.categories || [];
+function updatePolygonChart() {
+    if (!window.polygonChart) return;
+    const categories = window.polygonChart.categories || [];
     const newData = categories.map(category => {
-        // name属性を使って正しいinput要素を特定する
         const input = document.querySelector(`input[name="rating-${category.id}"]`);
         const value = parseFloat(input?.value);
         return isNaN(value) ? 0 : Math.max(0, Math.min(5, value));
     });
-    window.pentagonChart.updateData(newData);
+    window.polygonChart.updateData(newData);
 }
 
-function initializeRadarChart(categories = []) {
+function initializePolygonChart(categories = []) {
     setTimeout(() => {
         try {
-            // チャートを初期化する前に、既存のチャートがあれば破棄する
-            if (window.pentagonChart && typeof window.pentagonChart.destroy === 'function') {
-                window.pentagonChart.destroy();
+            if (window.polygonChart && typeof window.polygonChart.destroy === 'function') {
+                window.polygonChart.destroy();
             }
-            window.pentagonChart = new PentagonChart('evaluation-radar-chart', categories);
+            window.polygonChart = new PolygonChart('evaluation-polygon-chart', categories);
         } catch (error) {
-            console.error('Error creating pentagon chart:', error);
+            console.error('Error creating polygon chart:', error);
         }
     }, 100);
 }
@@ -45,9 +43,7 @@ async function handleSaveEvaluation(e) {
     const ratings = {};
     let hasRatings = false;
     
-    // すべての評価項目（定量的・定性的）から値を取得
-    const ratingInputs = document.querySelectorAll('.rating-input');
-    ratingInputs.forEach(input => {
+    document.querySelectorAll('.rating-input').forEach(input => {
         const value = parseFloat(input.value);
         if (!isNaN(value) && value >= 1 && value <= 5) {
             const itemId = input.name.replace('rating-', '');
