@@ -1,5 +1,5 @@
 /**
- * settings.js - 管理者向け設定ページ (評価項目タイプ分離版)
+ * settings.js - 管理者向け設定ページ (評価項目タイプ分離・デバッグ対応版)
  */
 
 async function showSettingsPage() {
@@ -84,7 +84,9 @@ async function handleCreateItem(e) {
         showNotification('項目を追加しました', 'success');
         showSettingsPage(); // 画面を再読み込み
     } catch (error) {
-        showNotification('項目の追加に失敗しました', 'error');
+        // エラーの詳細をコンソールに出力
+        console.error("項目の追加処理でエラーが発生しました:", error);
+        showNotification('項目の追加に失敗しました。コンソールを確認してください。', 'error');
     }
 }
 
@@ -95,7 +97,8 @@ async function handleDeleteItem(id) {
             showNotification('項目を削除しました', 'success');
             showSettingsPage(); // 画面を再読み込み
         } catch (error) {
-            showNotification('項目の削除に失敗しました', 'error');
+            console.error("項目の削除処理でエラーが発生しました:", error);
+            showNotification('項目の削除に失敗しました。コンソールを確認してください。', 'error');
         }
     }
 }
