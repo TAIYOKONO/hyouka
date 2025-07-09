@@ -27,7 +27,7 @@
 
   /* レイアウト */
   --container-max-width: 1200px;
-  --navbar-height: 60px;
+  --navbar-height: 60px;-navbar-height：60px;
 
   /* スペーシング */
   --spacing-sm: 0.5rem;
