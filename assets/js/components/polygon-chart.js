@@ -1,5 +1,6 @@
 /**
  * polygon-chart.js - 動的多角形チャート
+ * 項目数に応じてN角形を動的に描画する
  */
 class PolygonChart {
     constructor(containerId, categories = [], data = [], options = {}) {
@@ -7,7 +8,7 @@ class PolygonChart {
         if (!this.container) return;
 
         this.categories = categories;
-        this.numVertices = this.categories.length;
+        this.numVertices = this.categories.length; // ★ 頂点数を動的に設定
         this.data = data.length ? data : this.categories.map(() => 0);
         
         this.options = {
@@ -31,7 +32,7 @@ class PolygonChart {
         this.svg.setAttribute('height', this.options.size);
         this.svg.setAttribute('viewBox', `0 0 ${this.options.size} ${this.options.size}`);
         
-        if (this.numVertices < 3) return;
+        if (this.numVertices < 3) return; // 3頂点未満は描画しない
 
         this.drawGrid();
         this.drawDataPath();
@@ -40,6 +41,7 @@ class PolygonChart {
         this.container.appendChild(this.svg);
     }
 
+    // ★ 頂点数を元に座標を計算するよう修正
     getPoint(value, index) {
         const angle = (Math.PI * 2 * index / this.numVertices) - (Math.PI / 2);
         const radius = (this.radius * value) / this.options.maxValue;
@@ -98,7 +100,7 @@ class PolygonChart {
 
     updateData(newData) {
         this.data = newData;
-        this.svg.innerHTML = '';
+        this.svg.innerHTML = ''; // 簡単のため再描画
         this.init();
     }
 
