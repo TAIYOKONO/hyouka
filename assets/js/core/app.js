@@ -1,103 +1,59 @@
 /**
- * app.js - 建設業評価システム メインアプリケーション (最終版)
+ * app.js - 建設業評価システム メインアプリケーション (最終確定版)
  */
 class ConstructionEvaluationApp {
     constructor() {
         this.version = '1.0.0';
-        this.initialized = false;
-        this.currentUser = null;
-        this.currentPage = 'login';
-        
         this.auth = null;
         this.router = null;
-        this.notifications = null;
-        this.navigation = null;
     }
     
-    async init() {
-        if (this.initialized) return;
-        console.log('🚀 Initializing Construction Evaluation System v' + this.version);
-        
-        try {
-            // モジュールを先に初期化
-            this.initializeModules();
-            this.setupEventListeners();
+    init() {
+        console.log('🚀 Initializing...');
+        this.auth = window.authManager;
+        this.router = new Router();
+        window.router = this.router;
 
-            // 認証状態の監視を開始し、完了を待つ
-            this.auth = window.authManager;
-            await new Promise(resolve => {
-                this.auth.init((user) => {
-                    this.currentUser = user;
-                    resolve(); 
-                });
-            });
-            
-            this.initialized = true;
-            console.log('✅ Construction Evaluation System initialized successfully');
-            
-        } catch (error) {
-            console.error('❌ App initialization failed:', error);
-            this.showInitializationError(error);
-        }
-    }
-    
-    initializeModules() {
-        if (typeof AppRouter !== 'undefined') {
-            this.router = new AppRouter();
-            window.router = this.router;
-        }
+        // ルート定義
+        this.router.addRoute('/', showLoginPage);
+        this.router.addRoute('/dashboard', showDashboard);
+        this.router.addRoute('/evaluations', showEvaluations);
+        this.router.addRoute('/evaluations/new', showNewEvaluationForm);
+        this.router.addRoute('/users', showUsers);
+        this.router.addRoute('/settings', showSettingsPage);
+        this.router.addRoute('/register', showRegistrationPage);
 
-        if (typeof i18n !== 'undefined') this.i18n = i18n.init ? i18n.init() : i18n;
-        if (typeof notificationManager !== 'undefined') this.notifications = notificationManager;
-        if (typeof navigation !== 'undefined') this.navigation = navigation;
-    }
-
-    setupEventListeners() {
+        // ログインフォームのイベントリスナー
         document.addEventListener('submit', (event) => {
             if (event.target.id === 'login-form') {
                 event.preventDefault();
-                this.handleLogin(event);
+                this.handleLogin();
             }
         });
+        
+        // 認証状態の監視を開始
+        this.auth.init(() => {
+            this.router.handleRouteChange(); // ログイン状態が変わったら、再度ページを判定させる
+        });
+        
+        console.log('✅ Initialized successfully');
     }
     
-    async handleLogin(event) {
-        const email = document.getElementById('email')?.value;
-        const password = document.getElementById('password')?.value;
-        
-        if (!email || !password) {
-            this.notifications?.show('メールアドレスとパスワードを入力してください', 'error');
-            return;
-        }
-        
-        const submitButton = document.getElementById('login-submit');
-        const originalText = submitButton?.textContent;
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.textContent = 'ログイン中...';
-        }
-        
+    async handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if (!email || !password) return alert('メールアドレスとパスワードを入力してください');
+
         const result = await this.auth.login(email, password);
-        
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.textContent = originalText;
-        }
-
         if (!result.success) {
-            this.notifications?.show(result.message, 'error');
+            alert('ログインに失敗しました: ' + result.message);
         }
-    }
-
-    showInitializationError(error) {
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) {
-            mainContent.innerHTML = `<div style="padding: 40px; text-align: center; color: #721c24; background: #f8d7da; border-radius: 8px;"><h2>システムエラー</h2><p>アプリケーションの起動に失敗しました。</p><p>エラー内容: ${error.message}</p></div>`;
-        }
+        // 成功時の画面遷移はinit内の認証状態監視が自動で行う
     }
 }
 
 const app = new ConstructionEvaluationApp();
-if (typeof window !== 'undefined') {
+document.addEventListener('DOMContentLoaded', () => {
     window.app = app;
-}
+    window.app.init();
+});
