@@ -1,107 +1,58 @@
 /**
- * router.js - 建設業評価システム ルーティング管理 (ハッシュモード最終版)
+ * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
 class Router {
     constructor() {
-        this.routes = new Map();
-        this.setupRoutes();
+        this.routes = {};
+        this.currentPath = '/';
         
-        window.addEventListener('hashchange', () => this.handleLocationChange());
-        window.addEventListener('load', () => this.handleLocationChange());
+        // ページが読み込まれた時とハッシュが変わった時に処理を実行
+        window.addEventListener('load', this.handleRouteChange.bind(this));
+        window.addEventListener('hashchange', this.handleRouteChange.bind(this));
     }
 
-    handleLocationChange() {
-        // ★★★ ハッシュからパス部分を正しく抽出するよう修正 ★★★
-        const path = (window.location.hash.slice(1).split('?')[0]) || '/';
-        const finalPath = path.startsWith('/') ? path : '/' + path;
-        this.navigate(finalPath, false);
+    // ルートを定義する
+    addRoute(path, component) {
+        this.routes[path] = component;
     }
-    
-    setupRoutes() {
-        this.addRoute('/', { name: 'login', component: 'login', requireAuth: false });
-        this.addRoute('/dashboard', { name: 'dashboard', component: 'dashboard', requireAuth: true });
-        this.addRoute('/evaluations', { name: 'evaluations', component: 'evaluations', requireAuth: true });
-        this.addRoute('/evaluations/new', { name: 'new-evaluation', component: 'newEvaluation', requireAuth: true, permission: 'create_evaluation' });
-        this.addRoute('/evaluations/:id', { name: 'evaluation-detail', component: 'evaluationDetail', requireAuth: true });
-        this.addRoute('/users', { name: 'users', component: 'users', requireAuth: true, permission: 'manage_users' });
-        this.addRoute('/settings', { name: 'settings', component: 'settings', requireAuth: true, permission: 'manage_settings' });
-        this.addRoute('/register', { name: 'register', component: 'register', requireAuth: false });
-    }
-    
-    addRoute(path, config) { this.routes.set(path, { path, ...config }); }
-    
-    async navigate(path, pushToHistory = true) {
-        const route = this.findRoute(path);
-        if (!route) return this.navigate('/dashboard');
 
-        if (route.requireAuth && !authManager.isAuthenticated()) return this.navigate('/');
-        if (!route.requireAuth && authManager.isAuthenticated()) return this.navigate('/dashboard');
+    // URLのハッシュを元に、表示するページを決定する
+    handleRouteChange() {
+        const path = window.location.hash.slice(1) || '/';
+        this.currentPath = path.split('?')[0];
         
-        if (route.permission && !authManager.hasPermission(route.permission)) {
-            showNotification('このページにアクセスする権限がありません', 'error');
-            return this.navigate('/dashboard');
-        }
-        
-        if (pushToHistory) {
-            window.location.hash = path;
-        }
-        
-        await this.renderComponent(route, this.extractParams(path, route.path));
-    }
-    
-    findRoute(path) {
-        if (this.routes.has(path)) return this.routes.get(path);
-        for (const [routePath, route] of this.routes) {
-            const pathSegments = path.split('/');
-            const routeSegments = routePath.split('/');
-            if (pathSegments.length !== routeSegments.length) continue;
-            const match = routeSegments.every((seg, i) => seg.startsWith(':') || seg === pathSegments[i]);
-            if (match) return route;
-        }
-        return null;
-    }
+        const routeComponent = this.routes[this.currentPath];
 
-    extractParams(path, routePath) {
-        const params = {};
-        routePath.split('/').forEach((seg, i) => {
-            if (seg.startsWith(':')) params[seg.slice(1)] = path.split('/')[i];
-        });
-        return params;
-    }
-
-    async renderComponent(route, params) {
-        const functionMap = {
-            login: () => {},
-            dashboard: showDashboard,
-            evaluations: showEvaluations, 
-            newEvaluation: showNewEvaluationForm,
-            evaluationDetail: viewEvaluation,
-            users: showUsers,
-            settings: showSettingsPage,
-            register: showRegistrationPage
-        };
-        const pageFunction = functionMap[route.component];
-
-        if (typeof pageFunction === 'function') {
-            if (route.component !== 'login' && route.component !== 'register') {
-                document.body.classList.remove('login-mode');
-                document.body.classList.add('authenticated');
-                document.getElementById('app-header').style.display = 'block';
-                if (window.navigation) window.navigation.render();
-            } else {
-                document.body.classList.add('login-mode');
-                document.body.classList.remove('authenticated');
-                document.getElementById('app-header').style.display = 'none';
+        if (authManager.isAuthenticated()) {
+            // ログイン済みの場合
+            if (this.currentPath === '/') {
+                this.navigate('/dashboard'); // ログインページならダッシュボードへ
+            } else if (routeComponent) {
+                this.render(routeComponent);
             }
-
-            if (route.name === 'evaluation-detail' && params.id) pageFunction(params.id);
-            else pageFunction();
         } else {
-            document.getElementById('main-content').innerHTML = `<h2>Component not found: ${route.component}</h2>`;
+            // 未ログインの場合
+            if (this.currentPath.startsWith('/register')) {
+                this.render(this.routes['/register']); // 登録ページは表示
+            } else {
+                this.render(this.routes['/']); // それ以外はログインページへ
+            }
         }
     }
-}
-
-if (typeof window !== 'undefined') {
-    window.AppRouter = Router;
+    
+    // 指定したパスに移動する
+    navigate(path) {
+        window.location.hash = path;
+    }
+    
+    // ページを描画する
+    render(component) {
+        if (typeof component === 'function') {
+            document.body.className = authManager.isAuthenticated() ? 'authenticated' : 'login-mode';
+            component();
+        } else {
+            console.error(`Component for path "${this.currentPath}" is not a function.`);
+            document.getElementById('main-content').innerHTML = `<h2>ページが見つかりません</h2>`;
+        }
+    }
 }
