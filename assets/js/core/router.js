@@ -1,5 +1,5 @@
 /**
- * router.js - 建設業評価システム ルーティング管理 (ハッシュモード・URL解析強化版)
+ * router.js - 建設業評価システム ルーティング管理 (ハッシュモード最終版)
  */
 class Router {
     constructor() {
@@ -11,9 +11,7 @@ class Router {
     }
 
     handleLocationChange() {
-        // ★ URLのハッシュ部分からパスとクエリを正しく分離するよう修正
-        const hash = window.location.hash.slice(1) || '/';
-        const [path, queryString] = hash.split('?');
+        const path = window.location.hash.slice(1).split('?')[0] || '/';
         this.navigate(path, false);
     }
     
@@ -32,10 +30,7 @@ class Router {
     
     async navigate(path, pushToHistory = true) {
         const route = this.findRoute(path);
-        if (!route) {
-            console.error(`Route not found for path: ${path}`);
-            return this.navigate('/dashboard');
-        }
+        if (!route) return this.navigate('/dashboard');
 
         if (route.requireAuth && !authManager.isAuthenticated()) return this.navigate('/');
         if (!route.requireAuth && authManager.isAuthenticated()) return this.navigate('/dashboard');
@@ -46,7 +41,6 @@ class Router {
         }
         
         if (pushToHistory) {
-            // クエリパラメータを維持しつつハッシュを更新
             const currentQuery = window.location.hash.split('?')[1];
             const newHash = currentQuery ? `${path}?${currentQuery}` : path;
             window.location.hash = newHash;
@@ -70,7 +64,7 @@ class Router {
     extractParams(path, routePath) {
         const params = {};
         routePath.split('/').forEach((seg, i) => {
-            if (seg.startsWith(':')) params[seg.slice(1)] = path.split('/')[i];if（seg.startswith（ '：'））params [seg.slice（1）] = path.split（ '/'）[i];
+            if (seg.startsWith(':')) params[seg.slice(1)] = path.split('/')[i];
         });
         return params;
     }
