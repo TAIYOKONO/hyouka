@@ -1,5 +1,5 @@
 /**
- * register.js - 新規ユーザー登録ページ (最終版)
+ * register.js - 新規ユーザー登録ページ (詳細フォーム版)
  */
 async function showRegistrationPage() {
     const mainContent = document.getElementById('main-content');
@@ -17,14 +17,22 @@ async function showRegistrationPage() {
 
         mainContent.innerHTML = `
             <div class="login-page">
-                <div class="login-container">
-                    <div class="login-header"><h1>ユーザー登録</h1><p>ようこそ！情報を入力してください。</p></div>
+                <div class="login-container" style="max-width: 550px;">
+                    <div class="login-header"><h1>ユーザー登録</h1><p>ようこそ！情報を入力して登録を申請してください。</p></div>
                     <form id="registration-form">
                         <input type="hidden" id="reg-role" value="${invitation.role}">
                         <input type="hidden" id="reg-token" value="${token}">
-                        <div class="form-group"><label>名前</label><input type="text" id="reg-name" required></div>
-                        <div class="form-group"><label>メールアドレス</label><input type="email" id="reg-email" required></div>
-                        <div class="form-group"><label>パスワード</label><input type="password" id="reg-password" required></div>
+                        
+                        <div class="form-group"><label for="reg-name">氏名</label><input type="text" id="reg-name" required></div>
+                        <div class="form-group"><label for="reg-email">メールアドレス</label><input type="email" id="reg-email" required></div>
+                        <div class="form-group"><label for="reg-password">パスワード</label><input type="password" id="reg-password" required></div>
+                        
+                        <hr style="margin: 2rem 0;">
+
+                        <div class="form-group"><label for="reg-department">部署</label><input type="text" id="reg-department"></div>
+                        <div class="form-group"><label for="reg-position">役職 / 職種</label><input type="text" id="reg-position"></div>
+                        <div class="form-group"><label for="reg-employee-id">社員番号</label><input type="text" id="reg-employee-id"></div>
+                        
                         <button type="submit" class="btn btn-primary" style="width: 100%;">登録申請</button>
                     </form>
                 </div>
@@ -43,12 +51,21 @@ async function handleRegistration(e) {
     const role = document.getElementById('reg-role').value;
     const token = document.getElementById('reg-token').value;
 
-    if (!name || !email || !password || !role || !token) {
-        return showNotification("すべての項目を入力してください。", "error");
+    // 新しいフォーム項目
+    const department = document.getElementById('reg-department').value;
+    const position = document.getElementById('reg-position').value;
+    const employeeId = document.getElementById('reg-employee-id').value;
+
+    if (!name || !email || !password) {
+        return showNotification("氏名、メールアドレス、パスワードは必須です。", "error");
     }
 
     try {
-        await api.createUserWithPendingApproval({name, email, password, role, token});
+        const userData = {
+            name, email, password, role, token,
+            department, position, employeeId
+        };
+        await api.createUserWithPendingApproval(userData);
         document.getElementById('main-content').innerHTML = `
             <div class="login-page">
                 <div class="login-container text-center">
