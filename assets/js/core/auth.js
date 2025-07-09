@@ -1,5 +1,5 @@
 /**
- * auth.js - 建設業評価システム認証管理 (最終版)
+ * auth.js - 認証管理 (最終版)
  */
 class AuthManager {
     constructor() {
@@ -18,7 +18,7 @@ class AuthManager {
         this.auth.onAuthStateChanged(async (user) => {
             const wasAuthenticated = this.isAuthenticated();
 
-            if (user) {
+            if (user && user.uid) { // uidの存在もチェック
                 const userDoc = await this.db.collection('users').doc(user.uid).get();
                 if (userDoc.exists) {
                     this.currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
@@ -32,12 +32,9 @@ class AuthManager {
                 this.userRole = null;
             }
 
-            // ★★★ ここからページ遷移のロジックを追加 ★★★
-            // 状態が「未ログイン」→「ログイン」に変わった瞬間
             if (!wasAuthenticated && this.isAuthenticated()) {
                 if(window.router) router.navigate('/dashboard');
             }
-            // ★★★ ここまで追加 ★★★
 
             if (typeof onAuthStateChangedCallback === 'function') {
                 onAuthStateChangedCallback(this.currentUser);
@@ -49,24 +46,20 @@ class AuthManager {
         try {
             if (!email || !password) throw new Error('メールアドレスとパスワードは必須です');
             await this.auth.signInWithEmailAndPassword(email, password);
-            return { success: true, message: `ようこそ！` };
+            return { success: true };
         } catch (error) {
-            console.error('❌ Login failed:', error);
             let message = 'ログインに失敗しました。';
             if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 message = 'メールアドレスまたはパスワードが間違っています。';
             }
-            return { success: false, error: error.message, message: message };
+            return { success: false, message: message };
         }
     }
 
     logout() {
         this.auth.signOut().then(() => {
-            if(window.router) {
-                router.navigate('/');
-            } else {
-                window.location.replace('/');
-            }
+            if(window.router) router.navigate('/');
+            else window.location.hash = '';
         });
     }
 
