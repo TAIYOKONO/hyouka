@@ -1,5 +1,5 @@
 /**
- * users.js - ユーザー管理ページ (招待モーダル・承認機能付き)
+ * users.js - ユーザー管理ページ (招待・承認機能付き)
  */
 async function showUsers() {
     app.currentPage = 'users';
@@ -49,7 +49,7 @@ async function showUsers() {
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="invite-role">招待する役割を選択</label>
-                            <select id="invite-role">
+                            <select id="invite-role" class="form-control">
                                 <option value="worker">作業員</option>
                                 <option value="evaluator">評価者</option>
                             </select>
@@ -95,20 +95,15 @@ function renderPendingUsersSection(pendingUsers) {
         </div>`;
 }
 
-function showInviteUserModal() {
-    const modal = document.getElementById('invite-modal');
-    if (modal) modal.classList.add('show');
-}
-function closeInviteModal() {
-    const modal = document.getElementById('invite-modal');
-    if (modal) modal.classList.remove('show');
-}
+function showInviteUserModal() { document.getElementById('invite-modal')?.classList.add('show'); }
+function closeInviteModal() { document.getElementById('invite-modal')?.classList.remove('show'); }
 
 async function handleCreateInvitationLink() {
     const role = document.getElementById('invite-role').value;
     try {
         const invitationId = await api.createInvitation({ role });
-        const registrationUrl = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '')}#register?token=${invitationId}`;
+        // ★★★ 正しいハッシュ形式のURLを生成するよう修正 ★★★
+        const registrationUrl = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '')}#/register?token=${invitationId}`;
         document.getElementById('invite-link-input').value = registrationUrl;
         document.getElementById('invite-link-area').style.display = 'block';
     } catch (error) {
