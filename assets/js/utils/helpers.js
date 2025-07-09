@@ -1,5 +1,5 @@
 /**
- * utils/helpers.js - ヘルパー関数 (多角形チャート対応版)
+ * utils/helpers.js - ヘルパー関数 (最終版)
  */
 function updateBreadcrumbs(items) {
     const breadcrumbs = document.getElementById('breadcrumbs');
