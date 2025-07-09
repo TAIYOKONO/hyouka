@@ -7,7 +7,6 @@ class ApiClient {
         this.auth = firebase.auth();
     }
 
-    // --- ユーザー関連 ---
     async getUsers() {
         const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -25,27 +24,20 @@ class ApiClient {
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
-        if (!invitationDoc.exists || invitationDoc.data().used) {
-            throw new Error("無効な招待です。");
-        }
+        if (!invitationDoc.exists || invitationDoc.data().used) throw new Error("無効な招待です。");
         const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
         await this.db.collection('users').doc(userCredential.user.uid).set({
-            name: userData.name,
-            email: userData.email,
-            role: userData.role,
-            status: 'pending_approval',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            name: userData.name, email: userData.email, role: userData.role,
+            department: userData.department, position: userData.position, employeeId: userData.employeeId,
+            status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
         await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
         await this.auth.signOut();
     }
 
-    // --- 招待関連 ---
     async createInvitation(invitationData) {
         const docRef = await this.db.collection('invitations').add({
-            ...invitationData,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            used: false,
+            ...invitationData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), used: false,
         });
         return docRef.id;
     }
@@ -55,22 +47,15 @@ class ApiClient {
         return doc.exists ? { id: doc.id, ...doc.data() } : null;
     }
 
-    // --- 通知関連 ---
     async getNotificationsForUser(userId) {
         try {
             const snapshot = await this.db.collection('user_notifications')
-                .where('recipientUid', '==', userId)
-                .where('isRead', '==', false)
-                .orderBy('createdAt', 'desc')
-                .get();
+                .where('recipientUid', '==', userId).where('isRead', '==', false)
+                .orderBy('createdAt', 'desc').get();
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-            return [];
-        }
+        } catch (error) { return []; }
     }
 
-    // --- 評価関連 ---
     async getEvaluations() {
         const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -87,7 +72,6 @@ class ApiClient {
         return doc.exists ? { id: doc.id, ...doc.data() } : null;
     }
 
-    // --- 評価項目関連 ---
     async getEvaluationItems() {
         const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
