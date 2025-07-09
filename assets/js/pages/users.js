@@ -1,5 +1,5 @@
 /**
- * users.js - ユーザー管理ページ (招待・承認機能付き)
+ * users.js - ユーザー管理ページ (最終版)
  */
 async function showUsers() {
     app.currentPage = 'users';
@@ -56,7 +56,7 @@ async function showUsers() {
                         </div>
                         <button class="btn btn-primary" onclick="handleCreateInvitationLink()">招待リンクを作成</button>
                         <div id="invite-link-area" style="display:none; margin-top: 1rem;">
-                            <p>以下のリンクをコピーして、招待したい方に送ってください。</p>
+                            <p>以下のリンクをコピーして招待したい方に送ってください。</p>
                             <input type="text" id="invite-link-input" readonly style="width: 100%; padding: 0.5rem; background: #eee;">
                         </div>
                     </div>
@@ -76,20 +76,14 @@ function renderPendingUsersSection(pendingUsers) {
         if (currentUser.role === 'evaluator' && pendingUser.role === 'worker') return true;
         return false;
     });
-
     if (usersToApprove.length === 0) return '<h3>承認待ちのユーザーはいません</h3>';
-
     return `
         <h3>承認待ちのユーザー</h3>
         <div class="table-container" style="margin-bottom: 2rem;">
             <table class="table">
                 <thead><tr><th>名前</th><th>メールアドレス</th><th>希望役職</th><th>操作</th></tr></thead>
                 <tbody>
-                    ${usersToApprove.map(user => `
-                        <tr>
-                            <td>${user.name}</td><td>${user.email}</td><td>${user.role}</td>
-                            <td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td>
-                        </tr>`).join('')}
+                    ${usersToApprove.map(user => `<tr><td>${user.name}</td><td>${user.email}</td><td>${user.role}</td><td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td></tr>`).join('')}
                 </tbody>
             </table>
         </div>`;
@@ -102,8 +96,7 @@ async function handleCreateInvitationLink() {
     const role = document.getElementById('invite-role').value;
     try {
         const invitationId = await api.createInvitation({ role });
-        // ★★★ 正しいハッシュ形式のURLを生成するよう修正 ★★★
-        const registrationUrl = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '')}#/register?token=${invitationId}`;
+        const registrationUrl = `${window.location.origin}${window.location.pathname.replace(/index\.html$/, '')}#register?token=${invitationId}`;
         document.getElementById('invite-link-input').value = registrationUrl;
         document.getElementById('invite-link-area').style.display = 'block';
     } catch (error) {
@@ -116,11 +109,9 @@ async function handleApproveUser(userId, userName) {
     const pendingUsers = await api.getPendingUsers();
     const targetUser = pendingUsers.find(u => u.id === userId);
     if (!targetUser) return showNotification('対象ユーザーが見つかりません', 'error');
-
     if (targetUser.role === 'admin' && currentUser.email !== 't.kono@branu.jp') {
         return showNotification('管理者アカウントを承認する権限がありません。', 'error');
     }
-
     if (confirm(`${userName}さんを承認しますか？`)) {
         try {
             await api.approveUser(userId, targetUser.role);
