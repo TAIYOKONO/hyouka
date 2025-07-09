@@ -1,7 +1,6 @@
 /**
- * settings.js - 管理者向け設定ページ (評価項目タイプ分離・デバッグ対応版)
+ * settings.js - 管理者向け設定ページ (最終版)
  */
-
 async function showSettingsPage() {
     app.currentPage = 'settings';
     if (!authManager.hasPermission('manage_settings')) {
@@ -15,7 +14,6 @@ async function showSettingsPage() {
 
     try {
         const items = await api.getEvaluationItems();
-
         mainContent.innerHTML = `
             <div class="page">
                 <div class="page-header"><h1 class="page-title">評価項目・ウエイト設定</h1></div>
@@ -36,7 +34,6 @@ async function showSettingsPage() {
                             <div class="form-group"><button type="submit" class="btn btn-primary">追加</button></div>
                         </form>
                     </div>
-
                     <h3>登録済み項目一覧</h3>
                     <p>合計ウエイト: ${items.reduce((sum, item) => sum + (item.weight || 0), 0)}%</p>
                     <div class="table-container">
@@ -45,8 +42,7 @@ async function showSettingsPage() {
                             <tbody>
                                 ${items.map(item => `
                                     <tr>
-                                        <td>${item.order}</td>
-                                        <td>${item.name}</td>
+                                        <td>${item.order}</td><td>${item.name}</td>
                                         <td>${item.type === 'qualitative' ? '定性的' : '定量的'}</td>
                                         <td>${item.description || ''}</td>
                                         <td>${item.weight || 0}%</td>
@@ -56,11 +52,8 @@ async function showSettingsPage() {
                         </table>
                     </div>
                 </div>
-            </div>
-        `;
-
+            </div>`;
         document.getElementById('add-item-form').addEventListener('submit', handleCreateItem);
-
     } catch (error) {
         console.error("Failed to show settings page:", error);
         mainContent.innerHTML = `<div class="page-content"><p>設定ページの読み込みに失敗しました。</p></div>`;
@@ -78,13 +71,11 @@ async function handleCreateItem(e) {
     if (!name || !type || isNaN(weight) || isNaN(order)) {
         return showNotification('項目名、タイプ、ウエイト、表示順は必須です', 'error');
     }
-
     try {
         await api.createEvaluationItem({ name, type, description, weight, order });
         showNotification('項目を追加しました', 'success');
-        showSettingsPage(); // 画面を再読み込み
+        showSettingsPage();
     } catch (error) {
-        // エラーの詳細をコンソールに出力
         console.error("項目の追加処理でエラーが発生しました:", error);
         showNotification('項目の追加に失敗しました。コンソールを確認してください。', 'error');
     }
@@ -95,7 +86,7 @@ async function handleDeleteItem(id) {
         try {
             await api.deleteEvaluationItem(id);
             showNotification('項目を削除しました', 'success');
-            showSettingsPage(); // 画面を再読み込み
+            showSettingsPage();
         } catch (error) {
             console.error("項目の削除処理でエラーが発生しました:", error);
             showNotification('項目の削除に失敗しました。コンソールを確認してください。', 'error');
