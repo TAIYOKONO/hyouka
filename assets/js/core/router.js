@@ -11,8 +11,10 @@ class Router {
     }
 
     handleLocationChange() {
-        const path = window.location.hash.slice(1).split('?')[0] || '/';
-        this.navigate(path, false);
+        // ★★★ ハッシュからパス部分を正しく抽出するよう修正 ★★★
+        const path = (window.location.hash.slice(1).split('?')[0]) || '/';
+        const finalPath = path.startsWith('/') ? path : '/' + path;
+        this.navigate(finalPath, false);
     }
     
     setupRoutes() {
@@ -41,9 +43,7 @@ class Router {
         }
         
         if (pushToHistory) {
-            const currentQuery = window.location.hash.split('?')[1];
-            const newHash = currentQuery ? `${path}?${currentQuery}` : path;
-            window.location.hash = newHash;
+            window.location.hash = path;
         }
         
         await this.renderComponent(route, this.extractParams(path, route.path));
