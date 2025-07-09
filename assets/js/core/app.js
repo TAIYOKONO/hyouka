@@ -32,9 +32,6 @@ class ConstructionEvaluationApp {
                 });
             });
             
-            // 認証状態が確定した後、routerが自身の力で起動するのを待つ
-            // app.jsからrouterを起動するコードは不要
-            
             this.initialized = true;
             console.log('✅ Construction Evaluation System initialized successfully');
             
@@ -90,17 +87,6 @@ class ConstructionEvaluationApp {
         if (!result.success) {
             this.notifications?.show(result.message, 'error');
         }
-    }
-
-    setupGlobalErrorHandler() {
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-            this.notifications?.show('予期しないエラーが発生しました', 'error');
-        });
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            this.notifications?.show('処理中にエラーが発生しました', 'error');
-        });
     }
 
     showInitializationError(error) {
