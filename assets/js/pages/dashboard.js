@@ -36,15 +36,30 @@ async function showDashboard() {
                                     <tr>
                                         <td>${e.subordinate||''}</td><td>${e.evaluator||''}</td><td>${e.period||''}</td>
                                         <td>${e.status||''}</td><td>${e.updatedAt ? new Date(e.updatedAt.seconds * 1000).toLocaleDateString() : ''}</td>
-                                        <td><button class="btn btn-secondary" onclick="router.navigate('/evaluations/${e.id}')">詳細</button></td>
+                                        <td><button class="btn btn-secondary btn-view-detail" data-id="${e.id}">詳細</button></td>
                                     </tr>`).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>`;
+
+        // イベントリスナーの登録
+        document.querySelectorAll('.btn-view-detail').forEach(button => {
+            button.addEventListener('click', (e) => {
+                router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
+            });
+        });
+
     } catch (error) {
         console.error("Failed to show dashboard:", error);
         mainContent.innerHTML = `<div class="page-content"><p>ダッシュボードの読み込みに失敗しました。</p></div>`;
     }
+}
+
+// ログインページ表示用のダミー関数
+function showLoginPage() {
+    const mainContent = document.getElementById('main-content');
+    // この中身はapp.jsの起動フローで制御されるため、基本的には空で良い
+    // 必要であれば、ログインフォームの再表示ロジックをここに書く
 }
