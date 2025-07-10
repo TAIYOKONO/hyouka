@@ -1,5 +1,5 @@
 /**
- * dashboard.js - ダッシュボードページ (最終版)
+ * dashboard.js - ダッシュボードページ (アクションボタン付き最終版)
  */
 async function showDashboard() {
     app.currentPage = 'dashboard';
@@ -18,7 +18,13 @@ async function showDashboard() {
 
         mainContent.innerHTML = `
             <div class="page">
-                <div class="page-header"><h1 class="page-title">ダッシュボード</h1></div>
+                <div class="page-header">
+                    <h1 class="page-title">ダッシュボード</h1>
+                    <div class="page-actions">
+                        <button id="btn-new-evaluation-dash" class="btn btn-primary">➕ 新規評価</button>
+                        <button id="btn-manage-users-dash" class="btn btn-secondary">👥 ユーザー管理</button>
+                    </div>
+                </div>
                 <div class="page-content">
                     <div class="stats-grid">
                         <div class="stat-card"><div class="stat-number">${evaluations.length}</div><div class="stat-label">総評価数</div></div>
@@ -45,6 +51,13 @@ async function showDashboard() {
             </div>`;
 
         // イベントリスナーの登録
+        document.getElementById('btn-new-evaluation-dash').addEventListener('click', () => {
+            router.navigate('/evaluations/new');
+        });
+        document.getElementById('btn-manage-users-dash').addEventListener('click', () => {
+            router.navigate('/users');
+        });
+
         document.querySelectorAll('.btn-view-detail').forEach(button => {
             button.addEventListener('click', (e) => {
                 router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
@@ -60,6 +73,33 @@ async function showDashboard() {
 // ログインページ表示用のダミー関数
 function showLoginPage() {
     const mainContent = document.getElementById('main-content');
-    // この中身はapp.jsの起動フローで制御されるため、基本的には空で良い
-    // 必要であれば、ログインフォームの再表示ロジックをここに書く
+    if (!mainContent) return;
+    mainContent.innerHTML = `
+        <div class="login-page">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1 id="login-title">🏗️ 建設業評価システム</h1>
+                    <p id="login-subtitle">システムにログインしてください</p>
+                </div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email" id="email-label">メールアドレス</label>
+                        <input type="email" id="email" name="email" value="admin@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" id="password-label">パスワード</label>
+                        <input type="password" id="password" name="password" value="password123" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">ログイン</button>
+                </form>
+            </div>
+        </div>
+    `;
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            app.handleLogin();
+        });
+    }
 }
