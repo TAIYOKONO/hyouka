@@ -8,7 +8,7 @@ class NotificationManager {
         this.init();
     }
 
-    init() {熱 （） {
+    init() {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.createContainer());
         } else {
@@ -45,11 +45,8 @@ class NotificationManager {
             .notification-content { flex-grow: 1; }
             .notification-title { font-weight: 600; margin-bottom: 4px; }
             .notification-message { font-size: 14px; }
-            .notification-close { cursor: pointer; opacity: 0.5; }
+            .notification-close { cursor: pointer; opacity: 0.5; font-size: 20px; background: none; border: none; }
             .notification-close:hover { opacity: 1; }
-            .notification-success { border-left: 4px solid #4CAF50; }
-            .notification-error { border-left: 4px solid #F44336; }
-            .notification-info { border-left: 4px solid #2196F3; }
         `;
         document.head.appendChild(style);
     }
@@ -57,8 +54,8 @@ class NotificationManager {
     show(message, type = 'info', options = {}) {
         if (!this.container) this.createContainer();
         
-        const config = { duration: 5000, closeButton: true, ...options };
-        const id = `notification-${Date.now()}-${Math.random()}`;this.notifications = new Map（）;
+        const config = { duration: 5000, ...options };
+        const id = `notification-${Date.now()}`;
         
         const notification = this.createNotification(id, message, type, config);
         this.notifications.set(id, notification);
@@ -69,12 +66,12 @@ class NotificationManager {
         if (config.duration) {
             notification.timer = setTimeout(() => this.hide(id), config.duration);
         }
-        console.log(`🔔 Notification shown: ${type} - ${message}`);
     }
 
     createNotification(id, message, type, config) {
         const element = document.createElement('div');
-        element.className = `notification-item notification-${type}`;
+        element.className = `notification-item`;
+        element.style.borderLeft = `4px solid ${type === 'success' ? '#4CAF50' : type === 'error' ? '#F44336' : '#2196F3'}`;
         
         const icons = { success: '✅', error: '❌', info: 'ℹ️' };
         const titles = { success: '成功', error: 'エラー', info: '情報' };
@@ -85,12 +82,10 @@ class NotificationManager {
                 <div class="notification-title">${titles[type] || '通知'}</div>
                 <div class="notification-message">${message}</div>
             </div>
-            ${config.closeButton ? '<div class="notification-close">&times;</div>' : ''}
+            <button class="notification-close">&times;</button>
         `;
         
-        if (config.closeButton) {
-            element.querySelector('.notification-close').addEventListener('click', () => this.hide(id));element.QuerySelector（ '。通知クロース'）。AddEventListener（ 'click'、（）=> this.hide（id））;
-        }
+        element.querySelector('.notification-close').addEventListener('click', () => this.hide(id));
         return { id, element, timer: null };
     }
 
@@ -108,7 +103,12 @@ class NotificationManager {
     }
 }
 
-const notificationManager = new NotificationManager();
+window.notificationManager = new NotificationManager();
 function showNotification(message, type = 'info', options = {}) {
-    notificationManager.show(message, type, options);
+    // グローバルインスタンスが利用可能か確認
+    if (window.notificationManager) {
+        window.notificationManager.show(message, type, options);
+    } else {
+        console.error("NotificationManager is not initialized.");
+    }
 }
