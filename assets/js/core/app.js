@@ -22,6 +22,7 @@ class ConstructionEvaluationApp {
         this.router.addRoute('/users', showUsers);
         this.router.addRoute('/settings', showSettingsPage);
         this.router.addRoute('/register', showRegistrationPage);
+        this.router.addRoute('/evaluations/:id', viewEvaluation);
 
         // ログインフォームのイベントリスナー
         document.addEventListener('submit', (event) => {
