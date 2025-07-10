@@ -1,7 +1,10 @@
 /**
- * register.js - 新規ユーザー登録ページ (詳細フォーム版)
+ * register.js - 新規ユーザー登録ページ (最終版)
  */
 async function showRegistrationPage() {
+    if (window.navigation) window.navigation.render();
+    updateBreadcrumbs([{ label: 'ユーザー登録' }]);
+    
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>招待情報を確認中...</p></div>`;
 
@@ -39,6 +42,7 @@ async function showRegistrationPage() {
             </div>`;
         document.getElementById('registration-form').addEventListener('submit', handleRegistration);
     } catch (error) {
+        console.error("Failed to show registration page:", error);
         mainContent.innerHTML = `<div class="page-content"><p>エラー: ${error.message}</p><a href="#" onclick="router.navigate('/')">ログインページへ</a></div>`;
     }
 }
@@ -50,8 +54,6 @@ async function handleRegistration(e) {
     const password = document.getElementById('reg-password').value;
     const role = document.getElementById('reg-role').value;
     const token = document.getElementById('reg-token').value;
-
-    // 新しいフォーム項目
     const department = document.getElementById('reg-department').value;
     const position = document.getElementById('reg-position').value;
     const employeeId = document.getElementById('reg-employee-id').value;
@@ -61,10 +63,7 @@ async function handleRegistration(e) {
     }
 
     try {
-        const userData = {
-            name, email, password, role, token,
-            department, position, employeeId
-        };
+        const userData = { name, email, password, role, token, department, position, employeeId };
         await api.createUserWithPendingApproval(userData);
         document.getElementById('main-content').innerHTML = `
             <div class="login-page">
