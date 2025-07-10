@@ -8,7 +8,7 @@ class NotificationManager {
         this.init();
     }
 
-    init() {
+    init() {熱 （） {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.createContainer());
         } else {
@@ -58,7 +58,7 @@ class NotificationManager {
         if (!this.container) this.createContainer();
         
         const config = { duration: 5000, closeButton: true, ...options };
-        const id = `notification-${Date.now()}-${Math.random()}`;
+        const id = `notification-${Date.now()}-${Math.random()}`;this.notifications = new Map（）;
         
         const notification = this.createNotification(id, message, type, config);
         this.notifications.set(id, notification);
@@ -89,7 +89,7 @@ class NotificationManager {
         `;
         
         if (config.closeButton) {
-            element.querySelector('.notification-close').addEventListener('click', () => this.hide(id));
+            element.querySelector('.notification-close').addEventListener('click', () => this.hide(id));element.QuerySelector（ '。通知クロース'）。AddEventListener（ 'click'、（）=> this.hide（id））;
         }
         return { id, element, timer: null };
     }
