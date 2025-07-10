@@ -1,5 +1,5 @@
 /**
- * API通信クライアント (最終版)
+ * API通信クライアント (登録フォーム詳細化対応版)
  */
 class ApiClient {
     constructor() {
@@ -7,6 +7,7 @@ class ApiClient {
         this.auth = firebase.auth();
     }
 
+    // --- ユーザー関連 ---
     async getUsers() {
         const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -21,20 +22,30 @@ class ApiClient {
         await this.db.collection('users').doc(userId).update({ status: 'active' });
     }
 
+    // ★★★ 新しいユーザー情報を保存するよう修正 ★★★
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
         if (!invitationDoc.exists || invitationDoc.data().used) throw new Error("無効な招待です。");
+
         const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
+        
         await this.db.collection('users').doc(userCredential.user.uid).set({
-            name: userData.name, email: userData.email, role: userData.role,
-            department: userData.department, position: userData.position, employeeId: userData.employeeId,
-            status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            department: userData.department, // 部署
+            position: userData.position,     // 役職/職種
+            employeeId: userData.employeeId, // 社員番号
+            status: 'pending_approval',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
+
         await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
         await this.auth.signOut();
     }
 
+    // --- 招待関連 ---
     async createInvitation(invitationData) {
         const docRef = await this.db.collection('invitations').add({
             ...invitationData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), used: false,
@@ -47,6 +58,7 @@ class ApiClient {
         return doc.exists ? { id: doc.id, ...doc.data() } : null;
     }
 
+    // --- 通知関連 ---
     async getNotificationsForUser(userId) {
         try {
             const snapshot = await this.db.collection('user_notifications')
@@ -56,6 +68,7 @@ class ApiClient {
         } catch (error) { return []; }
     }
 
+    // --- 評価関連 ---
     async getEvaluations() {
         const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
