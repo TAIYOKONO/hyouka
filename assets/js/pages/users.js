@@ -2,9 +2,8 @@
  * users.js - ユーザー管理ページ (最終版)
  */
 async function showUsers() {
-    app.currentPage = 'users';
     if (window.navigation) window.navigation.render();
-    updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: 'ユーザー管理' }]);
+    updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: 'ユーザー管理' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>ユーザー情報を読み込み中...</p></div>`;
