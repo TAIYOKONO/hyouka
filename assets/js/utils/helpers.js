@@ -1,10 +1,10 @@
 /**
- * utils/helpers.js - ヘルパー関数 (最終版)
+ * utils/helpers.js - ヘルパー関数 (多角形チャート対応版)
  */
 function updateBreadcrumbs(items) {
     const breadcrumbs = document.getElementById('breadcrumbs');
     if (!breadcrumbs || !items || !items.length) return;
-    breadcrumbs.innerHTML = items.map((item, index) => 
+    breadcrumbs.innerHTML = items.map((item, index) =>
         index === items.length - 1 ? `<span class="current">${item.label}</span>` : `<a href="#" onclick="router.navigate('${item.path || ''}')">${item.label}</a>`
     ).join(' <span class="separator">></span> ');
 }
@@ -42,7 +42,7 @@ async function handleSaveEvaluation(e) {
     }
     const ratings = {};
     let hasRatings = false;
-    
+
     document.querySelectorAll('.rating-input').forEach(input => {
         const value = parseFloat(input.value);
         if (!isNaN(value) && value >= 1 && value <= 5) {
@@ -57,7 +57,7 @@ async function handleSaveEvaluation(e) {
     }
     const ratingValues = Object.values(ratings);
     const avgRating = ratingValues.reduce((sum, r) => sum + r, 0) / ratingValues.length || 0;
-    
+
     const newEvaluationData = {
         subordinate: subordinate,
         evaluator: app.currentUser.name,
@@ -68,7 +68,7 @@ async function handleSaveEvaluation(e) {
         overallComment: document.getElementById('overall-comment').value,
         period: period,
     };
-    
+
     try {
         await api.createEvaluation(newEvaluationData);
         showNotification('評価を保存しました！', 'success');
