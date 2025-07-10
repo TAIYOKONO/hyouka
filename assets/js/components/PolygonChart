@@ -103,10 +103,4 @@ class PolygonChart {
         this.svg.innerHTML = ''; // 簡単のため再描画
         this.init();
     }
-
-    destroy() {
-        if (this.container) {
-            this.container.innerHTML = '';
-        }
-    }
 }
