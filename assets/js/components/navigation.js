@@ -25,16 +25,17 @@ class NavigationManager {
         
         header.innerHTML = `
             <div class="header-content">
-                <div class="logo"><h1 id="header-title">🏗️ 建設業評価システム</h1></div>
+                <div class="logo"><a href="#/dashboard" class="nav-link-logo">🏗️ 建設業評価システム</a></div>
                 <nav class="main-navigation">
                     <ul class="nav-menu" id="nav-menu">${this.renderMenuItems()}</ul>
                 </nav>
                 <div class="user-menu">
                     ${this.renderUserInfo()}
                     <div class="language-selector">
-                        <select id="language-select" class="form-control" onchange="i18n.setLanguage(this.value)">
+                        <select id="language-select" onchange="i18n.setLanguage(this.value)">
                             <option value="ja">🇯🇵 日本語</option>
                             <option value="en">🇬🇧 English</option>
+                            <option value="id">🇮🇩 Indonesia</option>
                             <option value="vi">🇻🇳 Tiếng Việt</option>
                         </select>
                     </div>
@@ -78,7 +79,7 @@ class NavigationManager {
                     <div class="user-role">${roleName}</div>
                 </div>
             </div>
-        `;`;
+        `;
     }
 
     attachEventListeners() {
@@ -89,17 +90,23 @@ class NavigationManager {
         const toggleButton = document.getElementById('mobile-menu-toggle');
         const mobileMenu = document.getElementById('mobile-nav-menu');
         if(toggleButton && mobileMenu) {
-            toggleButton.addEventListener('click', () => {
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
                 mobileMenu.classList.toggle('open');
             });
         }
 
-        // 言語選択の値を復元
+        document.addEventListener('click', (e) => {
+            if (mobileMenu && mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !toggleButton.contains(e.target)) {
+                mobileMenu.classList.remove('open');
+            }
+        });
+        
         const langSelect = document.getElementById('language-select');
         if (langSelect && window.i18n) {
             langSelect.value = window.i18n.currentLanguage;
         }
     }
-}
+} // ★★★ 抜けていたクラスの閉じ括弧
 
 window.navigation = new NavigationManager();
