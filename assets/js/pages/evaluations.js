@@ -1,8 +1,9 @@
 /**
- * evaluations.js - 評価関連ページ (多角形チャート対応版)
+ * evaluations.js - 評価関連ページ (最終版)
  */
 async function showEvaluations() {
     app.currentPage = 'evaluations';
+    if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧' }]);
     
     const mainContent = document.getElementById('main-content');
@@ -14,16 +15,16 @@ async function showEvaluations() {
             <div class="page">
                 <div class="page-header">
                     <h1 class="page-title">評価一覧</h1>
-                    <div><button class="btn btn-primary" onclick="router.navigate('/evaluations/new')">新規評価</button></div>
+                    <div><button id="btn-new-evaluation" class="btn btn-primary">新規評価</button></div>
                 </div>
                 <div class="page-content">
                     <div class="table-container">
                         <table class="table">
                             <thead><tr><th>評価対象者</th><th>評価者</th><th>評価期間</th><th>総合評価</th><th>ステータス</th><th>更新日</th><th>操作</th></tr></thead>
-                            <tbody>
+                            <tbody id="evaluations-table-body">
                                 ${evaluations.length === 0 ? `<tr><td colspan="7" style="text-align: center;">データがありません</td></tr>` : ''}
                                 ${evaluations.map(e => `
-                                    <tr>
+                                    <tr data-id="${e.id}">
                                         <td>${e.subordinate||''}</td><td>${e.evaluator||''}</td><td>${e.period||''}</td><td>${e.overallRating||'N/A'}/5 ⭐</td>
                                         <td>${e.status||''}</td><td>${e.updatedAt ? new Date(e.updatedAt.seconds * 1000).toLocaleDateString() : ''}</td>
                                         <td><button class="btn btn-secondary btn-view-detail" data-id="${e.id}">詳細</button></td>
@@ -33,7 +34,11 @@ async function showEvaluations() {
                     </div>
                 </div>
             </div>`;
-        
+
+        document.getElementById('btn-new-evaluation').addEventListener('click', () => {
+            router.navigate('/evaluations/new');
+        });
+
         document.querySelectorAll('.btn-view-detail').forEach(button => {
             button.addEventListener('click', (e) => {
                 router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
@@ -48,6 +53,7 @@ async function showEvaluations() {
 
 async function showNewEvaluationForm() {
     app.currentPage = 'new-evaluation';
+    if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '新規評価作成' }]);
     
     const mainContent = document.getElementById('main-content');
@@ -88,7 +94,7 @@ async function showNewEvaluationForm() {
                 </div>
             </div>`;
         document.getElementById('new-evaluation-form').addEventListener('submit', handleSaveEvaluation);
-        initializePolygonChart(quantitativeItems); // ★ PolygonChartを初期化
+        initializePolygonChart(quantitativeItems);
     } catch (error) {
         console.error("Failed to show new evaluation form:", error);
         mainContent.innerHTML = `<div class="page-content"><p>フォームの表示に失敗しました。</p></div>`;
@@ -97,6 +103,7 @@ async function showNewEvaluationForm() {
 
 async function viewEvaluation(id) {
     app.currentPage = 'evaluation-detail';
+    if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '評価詳細' }]);
     
     const mainContent = document.getElementById('main-content');
@@ -107,17 +114,23 @@ async function viewEvaluation(id) {
         if (!evaluation) throw new Error("評価データが見つかりません。");
         
         const evaluationItems = await api.getEvaluationItems();
+        
         const quantitativeItems = evaluationItems.filter(item => item.type === 'quantitative');
+        const qualitativeItems = evaluationItems.filter(item => item.type === 'qualitative');
 
-        const chartData = quantitativeItems.map(item => 
+        const polygonChartData = quantitativeItems.map(item => 
             (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0
         );
+        const barChartData = qualitativeItems.map(item => ({
+            label: item.name,
+            value: (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0
+        })).filter(item => item.value > 0);
 
         mainContent.innerHTML = `
             <div class="page">
                 <div class="page-header"><h1 class="page-title">👁️ 評価詳細</h1><button class="btn" onclick="router.navigate('/evaluations')">戻る</button></div>
                 <div class="page-content">
-                    <div class="evaluation-summary">
+                    <div class="evaluation-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                         <div class="evaluation-details">
                             <h3>基本情報</h3>
                             <div class="detail-row"><span class="label">期間:</span><span>${evaluation.period}</span></div>
@@ -126,15 +139,28 @@ async function viewEvaluation(id) {
                             <div class="detail-row"><span class="label">総合評価:</span><span>${evaluation.overallRating}/5 ⭐</span></div>
                             <div class="detail-row"><span class="label">更新日:</span><span>${new Date(evaluation.updatedAt.seconds * 1000).toLocaleDateString()}</span></div>
                         </div>
+                        <div class="form-section">
+                            <h3>総合コメント</h3>
+                            <p>${evaluation.overallComment || 'コメントはありません。'}</p>
+                        </div>
+                    </div>
+
+                    <div class="evaluation-graphs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
                         <div class="evaluation-chart">
                             <h4>定量的評価チャート</h4>
                             <div class="chart-container"><div id="detail-polygon-chart"></div></div>
                         </div>
+                        <div class="evaluation-chart">
+                            <h4>定性的評価グラフ</h4>
+                            <div id="detail-bar-chart"></div>
+                        </div>
                     </div>
-                    <div class="form-section"><h3>総合コメント</h3><p>${evaluation.overallComment || 'コメントはありません。'}</p></div>
                 </div>
             </div>`;
-        new PolygonChart('detail-polygon-chart', quantitativeItems, chartData); // ★ PolygonChartを初期化
+        
+        if (quantitativeItems.length > 0) new PolygonChart('detail-polygon-chart', quantitativeItems, polygonChartData);
+        if (qualitativeItems.length > 0) new BarChart('detail-bar-chart', barChartData);
+
     } catch (error) {
         console.error("Failed to show evaluation detail:", error);
         mainContent.innerHTML = `<div class="page-content"><p>評価詳細の読み込みに失敗しました。</p></div>`;
