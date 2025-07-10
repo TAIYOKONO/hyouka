@@ -2,7 +2,6 @@
  * evaluations.js - 評価関連ページ (最終版)
  */
 async function showEvaluations() {
-    app.currentPage = 'evaluations';
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧' }]);
     
@@ -21,10 +20,10 @@ async function showEvaluations() {
                     <div class="table-container">
                         <table class="table">
                             <thead><tr><th>評価対象者</th><th>評価者</th><th>評価期間</th><th>総合評価</th><th>ステータス</th><th>更新日</th><th>操作</th></tr></thead>
-                            <tbody id="evaluations-table-body">
+                            <tbody>
                                 ${evaluations.length === 0 ? `<tr><td colspan="7" style="text-align: center;">データがありません</td></tr>` : ''}
                                 ${evaluations.map(e => `
-                                    <tr data-id="${e.id}">
+                                    <tr>
                                         <td>${e.subordinate||''}</td><td>${e.evaluator||''}</td><td>${e.period||''}</td><td>${e.overallRating||'N/A'}/5 ⭐</td>
                                         <td>${e.status||''}</td><td>${e.updatedAt ? new Date(e.updatedAt.seconds * 1000).toLocaleDateString() : ''}</td>
                                         <td><button class="btn btn-secondary btn-view-detail" data-id="${e.id}">詳細</button></td>
@@ -35,14 +34,9 @@ async function showEvaluations() {
                 </div>
             </div>`;
 
-        document.getElementById('btn-new-evaluation').addEventListener('click', () => {
-            router.navigate('/evaluations/new');
-        });
-
+        document.getElementById('btn-new-evaluation')?.addEventListener('click', () => router.navigate('/evaluations/new'));
         document.querySelectorAll('.btn-view-detail').forEach(button => {
-            button.addEventListener('click', (e) => {
-                router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
-            });
+            button.addEventListener('click', (e) => router.navigate(`/evaluations/${e.currentTarget.dataset.id}`));
         });
 
     } catch (error) {
@@ -52,7 +46,6 @@ async function showEvaluations() {
 }
 
 async function showNewEvaluationForm() {
-    app.currentPage = 'new-evaluation';
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '新規評価作成' }]);
     
@@ -76,18 +69,15 @@ async function showNewEvaluationForm() {
                             <div class="form-group"><label for="evaluation-period">評価期間</label><select id="evaluation-period" required><option value="">選択</option><option value="2025年上期">2025年上期</option><option value="2025年下期">2025年下期</option></select></div>
                             <div class="form-group"><label for="subordinate-select">評価対象者</label><select id="subordinate-select" required><option value="">選択</option>${workers.map(w => `<option value="${w.name}">${w.name}</option>`).join('')}</select></div>
                         </div>
-
                         <div class="form-section">
                             <h3>定量的評価</h3>
                             <div class="rating-input-group">${quantitativeItems.map(item => `<div class="rating-input-item"><div class="rating-input-label"><strong>${item.name}</strong><small>${item.description||''}</small></div><div class="rating-input-controls"><input type="number" class="rating-input" name="rating-${item.id}" min="1" max="5" step="0.1" placeholder="1-5" oninput="updatePolygonChart()"></div></div>`).join('')}</div>
                             <div class="evaluation-chart" style="margin-top: 24px;"><div class="chart-container"><div id="evaluation-polygon-chart"></div></div></div>
                         </div>
-
                         <div class="form-section">
                             <h3>定性的評価</h3>
                             <div class="rating-input-group">${qualitativeItems.map(item => `<div class="rating-input-item"><div class="rating-input-label"><strong>${item.name}</strong><small>${item.description||''}</small></div><div class="rating-input-controls"><input type="number" class="rating-input" name="rating-${item.id}" min="1" max="5" step="0.1" placeholder="1-5"></div></div>`).join('')}</div>
                         </div>
-                        
                         <div class="form-section"><h3>総合コメント</h3><div class="form-group"><textarea id="overall-comment" placeholder="コメント" rows="4"></textarea></div></div>
                         <div style="text-align: center; margin-top: 32px;"><button type="submit" class="btn btn-success">評価を保存</button></div>
                     </form>
@@ -101,8 +91,7 @@ async function showNewEvaluationForm() {
     }
 }
 
-async function viewEvaluation(id) {
-    app.currentPage = 'evaluation-detail';
+async function viewEvaluation(params) {
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '評価詳細' }]);
     
@@ -110,21 +99,15 @@ async function viewEvaluation(id) {
     mainContent.innerHTML = `<div class="page-content"><p>評価詳細を読み込み中...</p></div>`;
 
     try {
-        const evaluation = await api.getEvaluationById(id);
+        const evaluation = await api.getEvaluationById(params.id);
         if (!evaluation) throw new Error("評価データが見つかりません。");
         
         const evaluationItems = await api.getEvaluationItems();
-        
         const quantitativeItems = evaluationItems.filter(item => item.type === 'quantitative');
         const qualitativeItems = evaluationItems.filter(item => item.type === 'qualitative');
 
-        const polygonChartData = quantitativeItems.map(item => 
-            (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0
-        );
-        const barChartData = qualitativeItems.map(item => ({
-            label: item.name,
-            value: (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0
-        })).filter(item => item.value > 0);
+        const quantitativeChartData = quantitativeItems.map(item => (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0);
+        const qualitativeChartData = qualitativeItems.map(item => (evaluation.ratings && evaluation.ratings[item.id]) ? evaluation.ratings[item.id] : 0);
 
         mainContent.innerHTML = `
             <div class="page">
@@ -144,22 +127,21 @@ async function viewEvaluation(id) {
                             <p>${evaluation.overallComment || 'コメントはありません。'}</p>
                         </div>
                     </div>
-
                     <div class="evaluation-graphs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
                         <div class="evaluation-chart">
                             <h4>定量的評価チャート</h4>
-                            <div class="chart-container"><div id="detail-polygon-chart"></div></div>
+                            <div class="chart-container"><div id="detail-quantitative-chart"></div></div>
                         </div>
                         <div class="evaluation-chart">
-                            <h4>定性的評価グラフ</h4>
-                            <div id="detail-bar-chart"></div>
+                            <h4>定性的評価チャート</h4>
+                            <div class="chart-container"><div id="detail-qualitative-chart"></div></div>
                         </div>
                     </div>
                 </div>
             </div>`;
         
-        if (quantitativeItems.length > 0) new PolygonChart('detail-polygon-chart', quantitativeItems, polygonChartData);
-        if (qualitativeItems.length > 0) new BarChart('detail-bar-chart', barChartData);
+        if (quantitativeItems.length > 0) new PolygonChart('detail-quantitative-chart', quantitativeItems, quantitativeChartData);
+        if (qualitativeItems.length > 0) new PolygonChart('detail-qualitative-chart', qualitativeItems, qualitativeChartData);
 
     } catch (error) {
         console.error("Failed to show evaluation detail:", error);
