@@ -1,5 +1,5 @@
 /**
- * ナビゲーションシステム (最終版)
+ * navigation.js - グローバルナビゲーション管理 (最終版)
  */
 class NavigationManager {
     constructor() {
@@ -7,18 +7,21 @@ class NavigationManager {
         this.menuItems = [];
     }
 
-    async render() {
+    render() {
         this.currentUser = authManager.getCurrentUser();
-        if (!this.currentUser) return;
+        if (!this.currentUser) {
+            // ログインしていない場合はヘッダーを非表示
+            const header = document.getElementById('app-header');
+            if (header) header.style.display = 'none';
+            return;
+        }
         
-        const notifications = await api.getNotificationsForUser(this.currentUser.uid);
-        const notificationCount = notifications.length;
-
-        this.setupMenuItems(notificationCount);
+        this.setupMenuItems();
         
         const header = document.getElementById('app-header');
         if (!header) return;
 
+        header.style.display = 'block'; // ログイン済みなら表示
         header.innerHTML = `
             <div class="header-content">
                 <div class="logo"><h1 id="header-title">🏗️ 建設業評価システム</h1></div>
@@ -26,22 +29,23 @@ class NavigationManager {
                 <div class="user-menu">
                     ${this.renderUserInfo()}
                     <div class="language-selector">
-                        <select id="header-language-select">
+                        <select id="language-select" class="form-control">
                             <option value="ja">🇯🇵 日本語</option>
                             <option value="vi">🇻🇳 Tiếng Việt</option>
+                            <option value="en">🇬🇧 English</option>
                         </select>
                     </div>
+                    <button id="logout-button" class="btn btn-secondary">ログアウト</button>
                 </div>
             </div>`;
         this.attachEventListeners();
     }
 
-    setupMenuItems(notificationCount = 0) {
-        const userManagementLabel = `ユーザー管理 ${notificationCount > 0 ? `<span class="notification-badge">${notificationCount}</span>` : ''}`;
+    setupMenuItems() {
         this.menuItems = [
             { id: 'dashboard', label: 'ダッシュボード', path: '/dashboard', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'evaluations', label: '評価一覧', path: '/evaluations', roles: ['admin', 'evaluator', 'worker'] },
-            { id: 'users', label: userManagementLabel, path: '/users', roles: ['admin', 'evaluator'] },
+            { id: 'users', label: 'ユーザー管理', path: '/users', roles: ['admin', 'evaluator'] },
             { id: 'settings', label: '評価項目設定', path: '/settings', roles: ['admin'] },
         ];
     }
@@ -50,7 +54,7 @@ class NavigationManager {
         if (!this.currentUser) return '';
         return this.menuItems
             .filter(item => item.roles.includes(this.currentUser.role))
-            .map(item => `<li><a href="#" class="nav-link" data-path="${item.path}">${item.label}</a></li>`)
+            .map(item => `<li><a href="#${item.path}" class="nav-link">${item.label}</a></li>`)
             .join('');
     }
 
@@ -64,19 +68,15 @@ class NavigationManager {
                     <div class="user-name">${this.currentUser.name}</div>
                     <div class="user-role">${roleName}</div>
                 </div>
-            </div>
-            <button onclick="logout()" class="btn btn-secondary">ログアウト</button>
-        `;
+            </div>`;
     }
 
     attachEventListeners() {
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const path = e.currentTarget.dataset.path;
-                if (path && window.router) router.navigate(path);
-            });
+        document.getElementById('logout-button')?.addEventListener('click', () => {
+            authManager.logout();
         });
+        // 言語選択のイベントリスナーはi18n.jsで管理
     }
 }
+
 window.navigation = new NavigationManager();
