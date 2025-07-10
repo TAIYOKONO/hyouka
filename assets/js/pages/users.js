@@ -3,16 +3,18 @@
  */
 async function showUsers() {
     app.currentPage = 'users';
-    if (!authManager.hasPermission('manage_users') && !authManager.hasPermission('view_subordinate_evaluations')) {
-        showNotification('このページにアクセスする権限がありません', 'error');
-        return router.navigate('/dashboard');
-    }
+    if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: 'ユーザー管理' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>ユーザー情報を読み込み中...</p></div>`;
 
     try {
+        if (!authManager.hasPermission('manage_users') && !authManager.hasPermission('view_subordinate_evaluations')) {
+            showNotification('このページにアクセスする権限がありません', 'error');
+            return router.navigate('/dashboard');
+        }
+
         const activeUsers = await api.getUsers();
         const pendingUsers = await api.getPendingUsers();
 
@@ -20,7 +22,7 @@ async function showUsers() {
             <div class="page">
                 <div class="page-header">
                     <h1 class="page-title">👥 ユーザー管理</h1>
-                    <div><button class="btn btn-primary" onclick="showInviteUserModal()">➕ ユーザー招待</button></div>
+                    <div><button class="btn btn-primary" id="btn-show-invite-modal">➕ ユーザー招待</button></div>
                 </div>
                 <div class="page-content">
                     ${renderPendingUsersSection(pendingUsers)}
@@ -44,7 +46,7 @@ async function showUsers() {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3 class="modal-title">ユーザーを招待</h3>
-                        <button class="modal-close" onclick="closeInviteModal()">&times;</button>
+                        <button class="modal-close" id="btn-close-invite-modal">&times;</button>
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
@@ -54,7 +56,7 @@ async function showUsers() {
                                 <option value="evaluator">評価者</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="handleCreateInvitationLink()">招待リンクを作成</button>
+                        <button class="btn btn-primary" id="btn-create-invite-link">招待リンクを作成</button>
                         <div id="invite-link-area" style="display:none; margin-top: 1rem;">
                             <p>以下のリンクをコピーして招待したい方に送ってください。</p>
                             <input type="text" id="invite-link-input" readonly style="width: 100%; padding: 0.5rem; background: #eee;">
@@ -62,6 +64,12 @@ async function showUsers() {
                     </div>
                 </div>
             </div>`;
+
+        // イベントリスナーの登録
+        document.getElementById('btn-show-invite-modal').addEventListener('click', showInviteUserModal);
+        document.getElementById('btn-close-invite-modal').addEventListener('click', closeInviteModal);
+        document.getElementById('btn-create-invite-link').addEventListener('click', handleCreateInvitationLink);
+
     } catch (error) {
         console.error("Failed to show users:", error);
         mainContent.innerHTML = `<div class="page-content"><p>ユーザー一覧の読み込みに失敗しました。</p></div>`;
@@ -83,7 +91,11 @@ function renderPendingUsersSection(pendingUsers) {
             <table class="table">
                 <thead><tr><th>名前</th><th>メールアドレス</th><th>希望役職</th><th>操作</th></tr></thead>
                 <tbody>
-                    ${usersToApprove.map(user => `<tr><td>${user.name}</td><td>${user.email}</td><td>${user.role}</td><td><button class="btn btn-success" onclick="handleApproveUser('${user.id}', '${user.name}')">承認</button></td></tr>`).join('')}
+                    ${usersToApprove.map(user => `
+                        <tr>
+                            <td>${user.name}</td><td>${user.email}</td><td>${user.role}</td>
+                            <td><button class="btn btn-success btn-approve-user" data-user-id="${user.id}" data-user-name="${user.name}">承認</button></td>
+                        </tr>`).join('')}
                 </tbody>
             </table>
         </div>`;
@@ -104,21 +116,30 @@ async function handleCreateInvitationLink() {
     }
 }
 
-async function handleApproveUser(userId, userName) {
-    const currentUser = authManager.getCurrentUser();
-    const pendingUsers = await api.getPendingUsers();
-    const targetUser = pendingUsers.find(u => u.id === userId);
-    if (!targetUser) return showNotification('対象ユーザーが見つかりません', 'error');
-    if (targetUser.role === 'admin' && currentUser.email !== 't.kono@branu.jp') {
-        return showNotification('管理者アカウントを承認する権限がありません。', 'error');
-    }
-    if (confirm(`${userName}さんを承認しますか？`)) {
-        try {
-            await api.approveUser(userId, targetUser.role);
-            showNotification(`${userName}さんを承認しました`, 'success');
-            showUsers();
-        } catch (error) {
-            showNotification('承認処理に失敗しました', 'error');
+// 承認ボタンのイベントリスナーは、showUsers内で動的に生成された後に追加する必要がある
+document.addEventListener('click', async function(event) {
+    if (event.target.classList.contains('btn-approve-user')) {
+        const userId = event.target.dataset.userId;
+        const userName = event.target.dataset.userName;
+        const currentUser = authManager.getCurrentUser();
+        
+        const pendingUsers = await api.getPendingUsers();
+        const targetUser = pendingUsers.find(u => u.id === userId);
+        
+        if (!targetUser) return showNotification('対象ユーザーが見つかりません', 'error');
+
+        if (targetUser.role === 'admin' && currentUser.email !== 't.kono@branu.jp') {
+            return showNotification('管理者アカウントを承認する権限がありません。', 'error');
+        }
+
+        if (confirm(`${userName}さんを承認しますか？`)) {
+            try {
+                await api.approveUser(userId, targetUser.role);
+                showNotification(`${userName}さんを承認しました`, 'success');
+                showUsers();
+            } catch (error) {
+                showNotification('承認処理に失敗しました', 'error');
+            }
         }
     }
-}
+});
