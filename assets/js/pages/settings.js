@@ -3,16 +3,18 @@
  */
 async function showSettingsPage() {
     app.currentPage = 'settings';
-    if (!authManager.hasPermission('manage_settings')) {
-        showNotification('このページにアクセスする権限がありません', 'error');
-        return router.navigate('/dashboard');
-    }
+    if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価項目設定' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>設定項目を読み込み中...</p></div>`;
 
     try {
+        if (!authManager.hasPermission('manage_settings')) {
+            showNotification('このページにアクセスする権限がありません', 'error');
+            return router.navigate('/dashboard');
+        }
+
         const items = await api.getEvaluationItems();
         mainContent.innerHTML = `
             <div class="page">
@@ -20,17 +22,17 @@ async function showSettingsPage() {
                 <div class="page-content">
                     <div class="form-section">
                         <h3>新規項目追加</h3>
-                        <form id="add-item-form" style="display: flex; gap: 1rem; align-items: flex-end;">
-                            <div class="form-group" style="flex: 2;"><label>項目名</label><input type="text" id="item-name" required></div>
-                            <div class="form-group" style="flex: 1;"><label>タイプ</label>
+                        <form id="add-item-form" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+                            <div class="form-group" style="flex: 1 1 150px;"><label>項目名</label><input type="text" id="item-name" required></div>
+                            <div class="form-group" style="flex: 1 1 100px;"><label>タイプ</label>
                                 <select id="item-type">
                                     <option value="quantitative">定量的</option>
                                     <option value="qualitative">定性的</option>
                                 </select>
                             </div>
-                            <div class="form-group" style="flex: 3;"><label>説明</label><input type="text" id="item-description"></div>
-                            <div class="form-group" style="flex: 1;"><label>ウエイト(%)</label><input type="number" id="item-weight" required min="0" max="100"></div>
-                            <div class="form-group" style="flex: 1;"><label>表示順</label><input type="number" id="item-order" required min="1"></div>
+                            <div class="form-group" style="flex: 1 1 200px;"><label>説明</label><input type="text" id="item-description"></div>
+                            <div class="form-group" style="flex: 1 1 80px;"><label>ウエイト(%)</label><input type="number" id="item-weight" required min="0" max="100"></div>
+                            <div class="form-group" style="flex: 1 1 80px;"><label>表示順</label><input type="number" id="item-order" required min="1"></div>
                             <div class="form-group"><button type="submit" class="btn btn-primary">追加</button></div>
                         </form>
                     </div>
@@ -46,14 +48,20 @@ async function showSettingsPage() {
                                         <td>${item.type === 'qualitative' ? '定性的' : '定量的'}</td>
                                         <td>${item.description || ''}</td>
                                         <td>${item.weight || 0}%</td>
-                                        <td><button class="btn btn-danger" onclick="handleDeleteItem('${item.id}')">削除</button></td>
+                                        <td><button class="btn btn-danger btn-delete-item" data-id="${item.id}">削除</button></td>
                                     </tr>`).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>`;
+
+        // イベントリスナーの登録
         document.getElementById('add-item-form').addEventListener('submit', handleCreateItem);
+        document.querySelectorAll('.btn-delete-item').forEach(button => {
+            button.addEventListener('click', (e) => handleDeleteItem(e.currentTarget.dataset.id));
+        });
+
     } catch (error) {
         console.error("Failed to show settings page:", error);
         mainContent.innerHTML = `<div class="page-content"><p>設定ページの読み込みに失敗しました。</p></div>`;
