@@ -89,3 +89,14 @@ async function handleCreateItem(e) {
 }
 
 async function handleDeleteItem(id) {
+    if (confirm('この項目を削除しますか？')) {
+        try {
+            await api.deleteEvaluationItem(id);
+            showNotification('項目を削除しました', 'success');
+            showSettingsPage();
+        } catch (error) {
+            console.error("項目の削除処理でエラーが発生しました:", error);
+            showNotification('項目の削除に失敗しました。コンソールを確認してください。', 'error');
+        }
+    }
+}
