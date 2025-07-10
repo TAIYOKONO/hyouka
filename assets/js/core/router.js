@@ -18,24 +18,26 @@ class Router {
 
     // URLのハッシュを元に、表示するページを決定する
     handleRouteChange() {
-        const path = window.location.hash.slice(1) || '/';
-        this.currentPath = path.split('?')[0];
+        const pathWithQuery = window.location.hash.slice(1) || '/';
+        this.currentPath = pathWithQuery.split('?')[0];
         
-        const routeComponent = this.routes[this.currentPath];
+        const routeKey = this.findRouteKey(this.currentPath);
+        const component = this.routes[routeKey];
 
         if (authManager.isAuthenticated()) {
-            // ログイン済みの場合
             if (this.currentPath === '/') {
-                this.navigate('/dashboard'); // ログインページならダッシュボードへ
-            } else if (routeComponent) {
-                this.render(routeComponent);
+                return this.navigate('/dashboard');
+            }
+            if (component) {
+                this.render(component);
+            } else {
+                this.render(this.routes['/dashboard']);
             }
         } else {
-            // 未ログインの場合
             if (this.currentPath.startsWith('/register')) {
-                this.render(this.routes['/register']); // 登録ページは表示
+                this.render(this.routes['/register']);
             } else {
-                this.render(this.routes['/']); // それ以外はログインページへ
+                this.render(this.routes['/']);
             }
         }
     }
@@ -45,14 +47,50 @@ class Router {
         window.location.hash = path;
     }
     
+    // パラメータ付きのルート（例: /evaluations/:id）を見つける
+    findRouteKey(path) {
+        if (this.routes[path]) return path;
+        for (const routeKey in this.routes) {
+            if (routeKey.includes(':')) {
+                const routeSegments = routeKey.split('/');
+                const pathSegments = path.split('/');
+                if (routeSegments.length === pathSegments.length) {
+                    const match = routeSegments.every((seg, i) => seg.startsWith(':') || seg === pathSegments[i]);
+                    if (match) return routeKey;
+                }
+            }
+        }
+        return null;
+    }
+
+    // パスからパラメータを抽出する
+    extractParams(path, routeKey) {
+        const params = {};
+        const routeSegments = routeKey.split('/');
+        const pathSegments = path.split('/');
+        routeSegments.forEach((seg, i) => {
+            if (seg.startsWith(':')) {
+                params[seg.slice(1)] = pathSegments[i];
+            }
+        });
+        return params;
+    }
+
     // ページを描画する
     render(component) {
+        const mainContent = document.getElementById('main-content');
         if (typeof component === 'function') {
             document.body.className = authManager.isAuthenticated() ? 'authenticated' : 'login-mode';
-            component();
+            
+            const routeKey = this.findRouteKey(this.currentPath);
+            if (routeKey && routeKey.includes(':')) {
+                const params = this.extractParams(this.currentPath, routeKey);
+                component(params.id); // :id パラメータを渡す
+            } else {
+                component();
+            }
         } else {
-            console.error(`Component for path "${this.currentPath}" is not a function.`);
-            document.getElementById('main-content').innerHTML = `<h2>ページが見つかりません</h2>`;
+            mainContent.innerHTML = `<h2>ページが見つかりません</h2>`;
         }
     }
 }
