@@ -107,6 +107,6 @@ class NavigationManager {
             langSelect.value = window.i18n.currentLanguage;
         }
     }
-} // ★★★ 抜けていたクラスの閉じ括弧
+}
 
 window.navigation = new NavigationManager();
