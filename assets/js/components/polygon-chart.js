@@ -4,7 +4,7 @@
  */
 class PolygonChart {
     constructor(containerId, categories = [], data = [], options = {}) {
-        this.container = document.getElementById(containerId);
+        this.container = document.getElementById(containerId);this.container = document.getElementById（containerID）;
         if (!this.container) return;
 
         this.categories = categories;
@@ -102,5 +102,11 @@ class PolygonChart {
         this.data = newData;
         this.svg.innerHTML = ''; // 簡単のため再描画
         this.init();
+    }
+
+    destroy() {
+        if (this.container) {
+            this.container.innerHTML = '';
+        }
     }
 }
