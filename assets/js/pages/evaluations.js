@@ -3,7 +3,7 @@
  */
 async function showEvaluations() {
     if (window.navigation) window.navigation.render();
-    updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧' }]);
+    updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;
@@ -47,7 +47,7 @@ async function showEvaluations() {
 
 async function showNewEvaluationForm() {
     if (window.navigation) window.navigation.render();
-    updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '新規評価作成' }]);
+    updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧', path: '#/evaluations' }, { label: '新規評価作成' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>フォームを準備中...</p></div>`;
@@ -62,7 +62,7 @@ async function showNewEvaluationForm() {
 
         mainContent.innerHTML = `
             <div class="page">
-                <div class="page-header"><h1 class="page-title">新規評価作成</h1><button class="btn" onclick="router.navigate('/evaluations')">一覧に戻る</button></div>
+                <div class="page-header"><h1 class="page-title">新規評価作成</h1><button id="btn-back-to-list" class="btn">一覧に戻る</button></div>
                 <div class="page-content">
                     <form class="evaluation-form" id="new-evaluation-form">
                         <div class="form-section"><h3>基本情報</h3>
@@ -83,6 +83,7 @@ async function showNewEvaluationForm() {
                     </form>
                 </div>
             </div>`;
+        document.getElementById('btn-back-to-list').addEventListener('click', () => router.navigate('/evaluations'));
         document.getElementById('new-evaluation-form').addEventListener('submit', handleSaveEvaluation);
         initializePolygonChart(quantitativeItems);
     } catch (error) {
@@ -91,15 +92,15 @@ async function showNewEvaluationForm() {
     }
 }
 
-async function viewEvaluation(params) {
+async function viewEvaluation(id) {
     if (window.navigation) window.navigation.render();
-    updateBreadcrumbs([{ label: 'ダッシュボード', path: '/dashboard' }, { label: '評価一覧', path: '/evaluations' }, { label: '評価詳細' }]);
+    updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧', path: '#/evaluations' }, { label: '評価詳細' }]);
     
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>評価詳細を読み込み中...</p></div>`;
 
     try {
-        const evaluation = await api.getEvaluationById(params.id);
+        const evaluation = await api.getEvaluationById(id);
         if (!evaluation) throw new Error("評価データが見つかりません。");
         
         const evaluationItems = await api.getEvaluationItems();
@@ -111,7 +112,7 @@ async function viewEvaluation(params) {
 
         mainContent.innerHTML = `
             <div class="page">
-                <div class="page-header"><h1 class="page-title">👁️ 評価詳細</h1><button class="btn" onclick="router.navigate('/evaluations')">戻る</button></div>
+                <div class="page-header"><h1 class="page-title">👁️ 評価詳細</h1><button id="btn-back-to-list-detail" class="btn">戻る</button></div>
                 <div class="page-content">
                     <div class="evaluation-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                         <div class="evaluation-details">
@@ -140,6 +141,7 @@ async function viewEvaluation(params) {
                 </div>
             </div>`;
         
+        document.getElementById('btn-back-to-list-detail').addEventListener('click', () => router.navigate('/evaluations'));
         if (quantitativeItems.length > 0) new PolygonChart('detail-quantitative-chart', quantitativeItems, quantitativeChartData);
         if (qualitativeItems.length > 0) new PolygonChart('detail-qualitative-chart', qualitativeItems, qualitativeChartData);
 
