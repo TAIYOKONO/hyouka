@@ -1,5 +1,5 @@
 /**
- * register.js - 新規ユーザー登録ページ (最終版)
+ * register.js - 新規ユーザー登録ページ (詳細フォーム版)
  */
 async function showRegistrationPage() {
     const mainContent = document.getElementById('main-content');
@@ -51,6 +51,7 @@ async function handleRegistration(e) {
     const role = document.getElementById('reg-role').value;
     const token = document.getElementById('reg-token').value;
 
+    // 新しいフォーム項目
     const department = document.getElementById('reg-department').value;
     const position = document.getElementById('reg-position').value;
     const employeeId = document.getElementById('reg-employee-id').value;
