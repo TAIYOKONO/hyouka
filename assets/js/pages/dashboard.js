@@ -20,6 +20,10 @@ async function showDashboard() {
             <div class="page">
                 <div class="page-header">
                     <h1 class="page-title">ダッシュボード</h1>
+                    <div class="page-actions">
+                        <button id="btn-new-evaluation-dash" class="btn btn-primary">➕ 新規評価</button>
+                        <button id="btn-manage-users-dash" class="btn btn-secondary">👥 ユーザー管理</button>
+                    </div>
                 </div>
                 <div class="page-content">
                     <div class="stats-grid">
@@ -47,10 +51,10 @@ async function showDashboard() {
             </div>`;
 
         // イベントリスナーの登録
+        document.getElementById('btn-new-evaluation-dash')?.addEventListener('click', () => router.navigate('/evaluations/new'));
+        document.getElementById('btn-manage-users-dash')?.addEventListener('click', () => router.navigate('/users'));
         document.querySelectorAll('.btn-view-detail').forEach(button => {
-            button.addEventListener('click', (e) => {
-                router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
-            });
+            button.addEventListener('click', (e) => router.navigate(`/evaluations/${e.currentTarget.dataset.id}`));
         });
 
     } catch (error) {
@@ -79,4 +83,9 @@ function showLoginPage() {
                         <label for="password" id="password-label">パスワード</label>
                         <input type="password" id="password" name="password" value="password123" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="login
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">ログイン</button>
+                </form>
+            </div>
+        </div>
+    `;
+}
