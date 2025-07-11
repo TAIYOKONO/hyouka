@@ -1,4 +1,4 @@
-// api.js の全コード（対象職種メソッド追加版）
+// api.js の全コード（削除メソッド追加・修正版）
 /**
  * API通信クライアント (最終版)
  */
@@ -134,7 +134,6 @@ class ApiClient {
         return { id: doc.id, ...doc.data() };
     }
 
-    // --- ▼▼▼ 「対象職種」管理メソッド（ここから追加） ▼▼▼ ---
     async getTargetJobTypes() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
@@ -156,16 +155,32 @@ class ApiClient {
         const docRef = await this.db.collection('targetJobTypes').add(data);
         return { id: docRef.id, ...data };
     }
-    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
+    // --- ▼▼▼ ここから追加 ▼▼▼ ---
+    async deleteTargetJobType(jobTypeId) {
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+
+        const docRef = this.db.collection('targetJobTypes').doc(jobTypeId);
+        const doc = await docRef.get();
+
+        if (!doc.exists || doc.data().tenantId !== tenantId) {
+            throw new Error("削除するドキュメントが見つからないか、権限がありません。");
+        }
+        
+        await docRef.delete();
+    }
+    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
     // 評価項目は、今後のステップ2.1で構造が大きく変わるため、ここでは暫定的に修正します
     async getEvaluationItems() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
+        // ▼▼▼ 構文エラーを修正 ▼▼▼
         const snapshot = await this.db.collection('evaluationItems')
             .where('tenantId', '==', tenantId)
             .orderBy('order', 'asc').get();
+        // ▲▲▲ 修正ここまで ▲▲▲
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
@@ -179,8 +194,6 @@ class ApiClient {
     }
 
     async deleteEvaluationItem(id) {
-        // 安全のため、削除前にドキュメントを取得してテナントIDを検証することが望ましいですが、
-        // 今回は簡略化のため、直接削除します。
         await this.db.collection('evaluationItems').doc(id).delete();
     }
 }
