@@ -1,4 +1,3 @@
-// router.js の全コード
 /**
  * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
@@ -23,28 +22,29 @@ class Router {
         this.currentPath = pathWithQuery.split('?')[0];
         
         const routeKey = this.findRouteKey(this.currentPath);
-        const component = this.routes[routeKey];
+        let component = this.routes[routeKey];
 
         if (authManager.isAuthenticated()) {
+            // --- ログイン済みユーザーの処理 ---
             if (this.currentPath === '/') {
-                return this.navigate('/dashboard');
+                return this.navigate('/dashboard'); // ルートパスならダッシュボードへ
             }
-            if (component) {
-                this.render(component);
-            } else {
-                this.render(this.routes['/dashboard']);
+            if (!component) {
+                component = this.routes['/dashboard']; // 存在しないパスならダッシュボードへ
             }
         } else {
-            // ▼▼▼ このブロックを修正 ▼▼▼
-            if (this.currentPath === '/register-admin') {
-                this.render(this.routes['/register-admin']);
-            } else if (this.currentPath.startsWith('/register')) { // /register?token=... を処理
-                this.render(this.routes['/register']);
-            } else {
-                this.render(this.routes['/']); // それ以外はログインページへ
+            // --- ログアウト状態のユーザーの処理 ---
+            const allowedGuestRoutes = ['/', '/register-admin'];
+            
+            // '/register?token=...' のような動的なルートを許可
+            const isInvitationRoute = this.currentPath.startsWith('/register') && pathWithQuery.includes('token');
+
+            if (!allowedGuestRoutes.includes(this.currentPath) && !isInvitationRoute) {
+                 component = this.routes['/']; // 許可されたルートでない場合は、ログインページに強制的に戻す
             }
-            // ▲▲▲ 修正ここまで ▲▲▲
         }
+
+        this.render(component);
     }
     
     // 指定したパスに移動する
