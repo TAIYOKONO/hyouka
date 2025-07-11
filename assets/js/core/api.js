@@ -1,4 +1,4 @@
-// api.js の全コード（削除メソッド追加・修正版）
+// api.js の全コード（評価構造メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -155,8 +155,7 @@ class ApiClient {
         const docRef = await this.db.collection('targetJobTypes').add(data);
         return { id: docRef.id, ...data };
     }
-
-    // --- ▼▼▼ ここから追加 ▼▼▼ ---
+    
     async deleteTargetJobType(jobTypeId) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
@@ -170,17 +169,50 @@ class ApiClient {
         
         await docRef.delete();
     }
+
+    // --- ▼▼▼ ここから追加 ▼▼▼ ---
+    async getEvaluationStructure(jobTypeId) {
+        const tenantId = this._getTenantId();
+        if (!tenantId || !jobTypeId) return null;
+
+        const snapshot = await this.db.collection('evaluationStructures')
+            .where('tenantId', '==', tenantId)
+            .where('jobTypeId', '==', jobTypeId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) {
+            return null; // まだ構造が作成されていない
+        }
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+    }
+
+    async saveEvaluationStructure(structureId, structureData) {
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+
+        const dataToSave = { ...structureData, tenantId: tenantId };
+        
+        if (structureId) {
+            // 既存の構造を更新
+            await this.db.collection('evaluationStructures').doc(structureId).set(dataToSave, { merge: true });
+            return structureId;
+        } else {
+            // 新しい構造を作成
+            const docRef = await this.db.collection('evaluationStructures').add(dataToSave);
+            return docRef.id;
+        }
+    }
     // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
     // 評価項目は、今後のステップ2.1で構造が大きく変わるため、ここでは暫定的に修正します
     async getEvaluationItems() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
-        // ▼▼▼ 構文エラーを修正 ▼▼▼
         const snapshot = await this.db.collection('evaluationItems')
             .where('tenantId', '==', tenantId)
             .orderBy('order', 'asc').get();
-        // ▲▲▲ 修正ここまで ▲▲▲
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
