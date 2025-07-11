@@ -1,4 +1,4 @@
-// api.js の全コード（マルチテナント対応版）
+// api.js の全コード（対象職種メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -12,7 +12,6 @@ class ApiClient {
     _getTenantId() {
         const currentUser = window.authManager.getCurrentUser();
         if (!currentUser || !currentUser.tenantId) {
-            // ログイン直後などでtenantIdがまだない場合も考慮
             console.warn("Tenant ID is not available.");
             return null;
         }
@@ -22,7 +21,6 @@ class ApiClient {
     async getUsers() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
-        // ▼ テナントIDで絞り込み
         const snapshot = await this.db.collection('users')
             .where('tenantId', '==', tenantId)
             .where('status', '==', 'active').get();
@@ -32,7 +30,6 @@ class ApiClient {
     async getPendingUsers() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
-        // ▼ テナントIDで絞り込み
         const snapshot = await this.db.collection('users')
             .where('tenantId', '==', tenantId)
             .where('status', '==', 'pending_approval').get();
@@ -40,7 +37,6 @@ class ApiClient {
     }
 
     async approveUser(userId) {
-        // ▼ tenantIdの変更は不要なため、元のロジックのままでOK
         await this.db.collection('users').doc(userId).update({ status: 'active' });
     }
 
@@ -64,7 +60,6 @@ class ApiClient {
         const invitationDoc = await invitationRef.get();
         if (!invitationDoc.exists || invitationDoc.data().used) throw new Error("無効な招待です。");
         
-        // ▼ 招待状からテナントIDを取得
         const tenantId = invitationDoc.data().tenantId;
         if (!tenantId) throw new Error("招待情報にテナント情報が含まれていません。");
 
@@ -73,7 +68,7 @@ class ApiClient {
             name: userData.name, email: userData.email, role: userData.role,
             department: userData.department, position: userData.position, employeeId: userData.employeeId,
             status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            tenantId: tenantId, // ▼ テナントIDをセット
+            tenantId: tenantId,
         });
         await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
         await this.auth.signOut();
@@ -86,7 +81,7 @@ class ApiClient {
         
         const docRef = await this.db.collection('invitations').add({
             ...invitationData,
-            tenantId: tenantId, // ▼ テナントIDを追加
+            tenantId: tenantId,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             used: false,
         });
@@ -110,7 +105,6 @@ class ApiClient {
     async getEvaluations() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
-        // ▼ テナントIDで絞り込み
         const snapshot = await this.db.collection('evaluations')
             .where('tenantId', '==', tenantId)
             .orderBy('updatedAt', 'desc').get();
@@ -123,7 +117,7 @@ class ApiClient {
         
         const dataWithTimestamp = { 
             ...evaluationData,
-            tenantId: tenantId, // ▼ テナントIDを追加
+            tenantId: tenantId,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -140,6 +134,31 @@ class ApiClient {
         return { id: doc.id, ...doc.data() };
     }
 
+    // --- ▼▼▼ 「対象職種」管理メソッド（ここから追加） ▼▼▼ ---
+    async getTargetJobTypes() {
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        const snapshot = await this.db.collection('targetJobTypes')
+            .where('tenantId', '==', tenantId)
+            .orderBy('order', 'asc')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async createTargetJobType(jobTypeData) {
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+        const data = {
+            ...jobTypeData,
+            tenantId: tenantId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        const docRef = await this.db.collection('targetJobTypes').add(data);
+        return { id: docRef.id, ...data };
+    }
+    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
+
+
     // 評価項目は、今後のステップ2.1で構造が大きく変わるため、ここでは暫定的に修正します
     async getEvaluationItems() {
         const tenantId = this._getTenantId();
@@ -155,7 +174,7 @@ class ApiClient {
         if (!tenantId) throw new Error("テナント情報が取得できません。");
         await this.db.collection('evaluationItems').add({
             ...itemData,
-            tenantId: tenantId, // ▼ テナントIDを追加
+            tenantId: tenantId,
         });
     }
 
