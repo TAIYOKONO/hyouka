@@ -1,3 +1,4 @@
+// app.js の全コード
 /**
  * app.js - 建設業評価システム メインアプリケーション (最終確定版)
  */
@@ -23,6 +24,7 @@ class ConstructionEvaluationApp {
         this.router.addRoute('/settings', showSettingsPage);
         this.router.addRoute('/register', showRegistrationPage);
         this.router.addRoute('/evaluations/:id', viewEvaluation);
+        this.router.addRoute('/register-admin', showAdminRegistrationForm); // --- 追加 ---
 
         // ログインフォームのイベントリスナー
         document.addEventListener('submit', (event) => {
