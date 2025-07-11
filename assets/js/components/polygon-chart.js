@@ -4,11 +4,11 @@
  */
 class PolygonChart {
     constructor(containerId, categories = [], data = [], options = {}) {
-        this.container = document.getElementById(containerId);this.container = document.getElementById（containerID）;
+        this.container = document.getElementById(containerId);
         if (!this.container) return;
 
         this.categories = categories;
-        this.numVertices = this.categories.length; // ★ 頂点数を動的に設定
+        this.numVertices = this.categories.length;
         this.data = data.length ? data : this.categories.map(() => 0);
         
         this.options = {
@@ -32,7 +32,7 @@ class PolygonChart {
         this.svg.setAttribute('height', this.options.size);
         this.svg.setAttribute('viewBox', `0 0 ${this.options.size} ${this.options.size}`);
         
-        if (this.numVertices < 3) return; // 3頂点未満は描画しない
+        if (this.numVertices < 3) return;
 
         this.drawGrid();
         this.drawDataPath();
@@ -41,7 +41,6 @@ class PolygonChart {
         this.container.appendChild(this.svg);
     }
 
-    // ★ 頂点数を元に座標を計算するよう修正
     getPoint(value, index) {
         const angle = (Math.PI * 2 * index / this.numVertices) - (Math.PI / 2);
         const radius = (this.radius * value) / this.options.maxValue;
@@ -100,7 +99,7 @@ class PolygonChart {
 
     updateData(newData) {
         this.data = newData;
-        this.svg.innerHTML = ''; // 簡単のため再描画
+        this.svg.innerHTML = '';
         this.init();
     }
 
