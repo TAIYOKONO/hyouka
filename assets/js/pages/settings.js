@@ -1,102 +1,70 @@
-/**
- * settings.js - 管理者向け設定ページ (最終版)
- */
-async function showSettingsPage() {
-    if (window.navigation) window.navigation.render();
-    updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価項目設定' }]);
-    
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `<div class="page-content"><p>設定項目を読み込み中...</p></div>`;
+/* components.css の末尾に追記 */
 
-    try {
-        if (!authManager.hasPermission('manage_settings')) {
-            showNotification('このページにアクセスする権限がありません', 'error');
-            return router.navigate('/dashboard');
-        }
-
-        const items = await api.getEvaluationItems();
-        mainContent.innerHTML = `
-            <div class="page">
-                <div class="page-header"><h1 class="page-title">評価項目・ウエイト設定</h1></div>
-                <div class="page-content">
-                    <div class="form-section">
-                        <h3>新規項目追加</h3>
-                        <form id="add-item-form" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-                            <div class="form-group" style="flex: 1 1 150px;"><label>項目名</label><input type="text" id="item-name" required></div>
-                            <div class="form-group" style="flex: 1 1 100px;"><label>タイプ</label>
-                                <select id="item-type">
-                                    <option value="quantitative">定量的</option>
-                                    <option value="qualitative">定性的</option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="flex: 1 1 200px;"><label>説明</label><input type="text" id="item-description"></div>
-                            <div class="form-group" style="flex: 1 1 80px;"><label>ウエイト(%)</label><input type="number" id="item-weight" required min="0" max="100"></div>
-                            <div class="form-group" style="flex: 1 1 80px;"><label>表示順</label><input type="number" id="item-order" required min="1"></div>
-                            <div class="form-group"><button type="submit" class="btn btn-primary">追加</button></div>
-                        </form>
-                    </div>
-                    <h3>登録済み項目一覧</h3>
-                    <p>合計ウエイト: ${items.reduce((sum, item) => sum + (item.weight || 0), 0)}%</p>
-                    <div class="table-container">
-                        <table class="table">
-                            <thead><tr><th>表示順</th><th>項目名</th><th>タイプ</th><th>説明</th><th>ウエイト(%)</th><th>操作</th></tr></thead>
-                            <tbody>
-                                ${items.map(item => `
-                                    <tr>
-                                        <td>${item.order}</td><td>${item.name}</td>
-                                        <td>${item.type === 'qualitative' ? '定性的' : '定量的'}</td>
-                                        <td>${item.description || ''}</td>
-                                        <td>${item.weight || 0}%</td>
-                                        <td><button class="btn btn-danger btn-delete-item" data-id="${item.id}">削除</button></td>
-                                    </tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>`;
-
-        // イベントリスナーの登録
-        document.getElementById('add-item-form').addEventListener('submit', handleCreateItem);
-        document.querySelectorAll('.btn-delete-item').forEach(button => {
-            button.addEventListener('click', (e) => handleDeleteItem(e.currentTarget.dataset.id));
-        });
-
-    } catch (error) {
-        console.error("Failed to show settings page:", error);
-        mainContent.innerHTML = `<div class="page-content"><p>設定ページの読み込みに失敗しました。</p></div>`;
-    }
+/* --- 設定ページレイアウト --- */
+.settings-layout {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
 }
 
-async function handleCreateItem(e) {
-    e.preventDefault();
-    const name = document.getElementById('item-name').value;
-    const type = document.getElementById('item-type').value;
-    const description = document.getElementById('item-description').value;
-    const weight = parseInt(document.getElementById('item-weight').value, 10);
-    const order = parseInt(document.getElementById('item-order').value, 10);
-
-    if (!name || !type || isNaN(weight) || isNaN(order)) {
-        return showNotification('項目名、タイプ、ウエイト、表示順は必須です', 'error');
-    }
-    try {
-        await api.createEvaluationItem({ name, type, description, weight, order });
-        showNotification('項目を追加しました', 'success');
-        showSettingsPage();
-    } catch (error) {
-        console.error("項目の追加処理でエラーが発生しました:", error);
-        showNotification('項目の追加に失敗しました。コンソールを確認してください。', 'error');
-    }
+.settings-sidebar {
+    flex: 0 0 280px;
+    background: var(--color-background-secondary);
+    border-radius: var(--card-border-radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
 }
 
-async function handleDeleteItem(id) {
-    if (confirm('この項目を削除しますか？')) {
-        try {
-            await api.deleteEvaluationItem(id);
-            showNotification('項目を削除しました', 'success');
-            showSettingsPage();
-        } catch (error) {
-            console.error("項目の削除処理でエラーが発生しました:", error);
-            showNotification('項目の削除に失敗しました。コンソールを確認してください。', 'error');
-        }
-    }
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sidebar-list-item:hover {
+    background-color: #e9ecef;
+}
+
+.sidebar-list-item.active {
+    background-color: var(--color-primary-100);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.settings-main {
+    flex: 1;
+    min-width: 0;
+}
+
+#evaluation-structure-editor .placeholder-text {
+    text-align: center;
+    padding: 4rem;
+    background: var(--color-background-secondary);
+    border-radius: var(--card-border-radius);
+    color: var(--color-text-secondary);
+    border: 2px dashed var(--border-color);
 }
