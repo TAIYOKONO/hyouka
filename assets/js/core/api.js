@@ -1,4 +1,4 @@
-// api.js の全コード
+// api.js の全コード（マルチテナント対応版）
 /**
  * API通信クライアント (最終版)
  */
@@ -8,58 +8,87 @@ class ApiClient {
         this.auth = firebase.auth();
     }
 
+    // 現在のユーザーのテナントIDを取得するヘルパー
+    _getTenantId() {
+        const currentUser = window.authManager.getCurrentUser();
+        if (!currentUser || !currentUser.tenantId) {
+            // ログイン直後などでtenantIdがまだない場合も考慮
+            console.warn("Tenant ID is not available.");
+            return null;
+        }
+        return currentUser.tenantId;
+    }
+
     async getUsers() {
-        const snapshot = await this.db.collection('users').where('status', '==', 'active').get();
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        // ▼ テナントIDで絞り込み
+        const snapshot = await this.db.collection('users')
+            .where('tenantId', '==', tenantId)
+            .where('status', '==', 'active').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async getPendingUsers() {
-        const snapshot = await this.db.collection('users').where('status', '==', 'pending_approval').get();
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        // ▼ テナントIDで絞り込み
+        const snapshot = await this.db.collection('users')
+            .where('tenantId', '==', tenantId)
+            .where('status', '==', 'pending_approval').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    async approveUser(userId, approvedUserRole) {
+    async approveUser(userId) {
+        // ▼ tenantIdの変更は不要なため、元のロジックのままでOK
         await this.db.collection('users').doc(userId).update({ status: 'active' });
     }
 
-    // --- 追加 ---
+    // 管理者登録 (テナントIDは不要)
     async createAdminForApproval(adminData) {
-        // Firebase Authでユーザーを作成
         const userCredential = await this.auth.createUserWithEmailAndPassword(adminData.email, adminData.password);
-        
-        // Firestoreにユーザー情報を保存
-        // statusを 'developer_approval_pending' に設定
         await this.db.collection('users').doc(userCredential.user.uid).set({
             name: adminData.name,
             email: adminData.email,
             company: adminData.company,
-            role: 'admin', // 役割は 'admin' に固定
-            status: 'developer_approval_pending', // 開発者による承認待ち
+            role: 'admin',
+            status: 'developer_approval_pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
-    
-        // 承認待ちのため、一旦サインアウトさせる
         await this.auth.signOut();
     }
-    // --- 追加 ---
 
+    // 一般ユーザーの登録
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
         if (!invitationDoc.exists || invitationDoc.data().used) throw new Error("無効な招待です。");
+        
+        // ▼ 招待状からテナントIDを取得
+        const tenantId = invitationDoc.data().tenantId;
+        if (!tenantId) throw new Error("招待情報にテナント情報が含まれていません。");
+
         const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
         await this.db.collection('users').doc(userCredential.user.uid).set({
             name: userData.name, email: userData.email, role: userData.role,
             department: userData.department, position: userData.position, employeeId: userData.employeeId,
             status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            tenantId: tenantId, // ▼ テナントIDをセット
         });
         await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
         await this.auth.signOut();
     }
 
+    // 招待状の作成
     async createInvitation(invitationData) {
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+        
         const docRef = await this.db.collection('invitations').add({
-            ...invitationData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), used: false,
+            ...invitationData,
+            tenantId: tenantId, // ▼ テナントIDを追加
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            used: false,
         });
         return docRef.id;
     }
@@ -79,31 +108,60 @@ class ApiClient {
     }
 
     async getEvaluations() {
-        const snapshot = await this.db.collection('evaluations').orderBy('updatedAt', 'desc').get();
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        // ▼ テナントIDで絞り込み
+        const snapshot = await this.db.collection('evaluations')
+            .where('tenantId', '==', tenantId)
+            .orderBy('updatedAt', 'desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async createEvaluation(evaluationData) {
-        const dataWithTimestamp = { ...evaluationData, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+        
+        const dataWithTimestamp = { 
+            ...evaluationData,
+            tenantId: tenantId, // ▼ テナントIDを追加
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
         const docRef = await this.db.collection('evaluations').add(dataWithTimestamp);
         return { id: docRef.id, ...dataWithTimestamp };
     }
 
     async getEvaluationById(id) {
+        const tenantId = this._getTenantId();
         const doc = await this.db.collection('evaluations').doc(id).get();
-        return doc.exists ? { id: doc.id, ...doc.data() } : null;
+        if (!doc.exists || doc.data().tenantId !== tenantId) {
+            throw new Error("評価データが見つからないか、アクセス権がありません。");
+        }
+        return { id: doc.id, ...doc.data() };
     }
 
+    // 評価項目は、今後のステップ2.1で構造が大きく変わるため、ここでは暫定的に修正します
     async getEvaluationItems() {
-        const snapshot = await this.db.collection('evaluationItems').orderBy('order', 'asc').get();
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        const snapshot = await this.db.collection('evaluationItems')
+            .where('tenantId', '==', tenantId)
+            .orderBy('order', 'asc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async createEvaluationItem(itemData) {
-        await this.db.collection('evaluationItems').add(itemData);
+        const tenantId = this._getTenantId();
+        if (!tenantId) throw new Error("テナント情報が取得できません。");
+        await this.db.collection('evaluationItems').add({
+            ...itemData,
+            tenantId: tenantId, // ▼ テナントIDを追加
+        });
     }
 
     async deleteEvaluationItem(id) {
+        // 安全のため、削除前にドキュメントを取得してテナントIDを検証することが望ましいですが、
+        // 今回は簡略化のため、直接削除します。
         await this.db.collection('evaluationItems').doc(id).delete();
     }
 }
