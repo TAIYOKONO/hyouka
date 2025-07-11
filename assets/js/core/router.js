@@ -1,3 +1,4 @@
+// router.js の全コード
 /**
  * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
@@ -34,11 +35,15 @@ class Router {
                 this.render(this.routes['/dashboard']);
             }
         } else {
-            if (this.currentPath.startsWith('/register')) {
+            // ▼▼▼ このブロックを修正 ▼▼▼
+            if (this.currentPath === '/register-admin') {
+                this.render(this.routes['/register-admin']);
+            } else if (this.currentPath.startsWith('/register')) { // /register?token=... を処理
                 this.render(this.routes['/register']);
             } else {
-                this.render(this.routes['/']);
+                this.render(this.routes['/']); // それ以外はログインページへ
             }
+            // ▲▲▲ 修正ここまで ▲▲▲
         }
     }
     
