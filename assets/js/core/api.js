@@ -1,3 +1,4 @@
+// api.js の全コード
 /**
  * API通信クライアント (最終版)
  */
@@ -20,6 +21,27 @@ class ApiClient {
     async approveUser(userId, approvedUserRole) {
         await this.db.collection('users').doc(userId).update({ status: 'active' });
     }
+
+    // --- 追加 ---
+    async createAdminForApproval(adminData) {
+        // Firebase Authでユーザーを作成
+        const userCredential = await this.auth.createUserWithEmailAndPassword(adminData.email, adminData.password);
+        
+        // Firestoreにユーザー情報を保存
+        // statusを 'developer_approval_pending' に設定
+        await this.db.collection('users').doc(userCredential.user.uid).set({
+            name: adminData.name,
+            email: adminData.email,
+            company: adminData.company,
+            role: 'admin', // 役割は 'admin' に固定
+            status: 'developer_approval_pending', // 開発者による承認待ち
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+    
+        // 承認待ちのため、一旦サインアウトさせる
+        await this.auth.signOut();
+    }
+    // --- 追加 ---
 
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
