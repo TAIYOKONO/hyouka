@@ -94,54 +94,6 @@ EvaluationApp.Constants = {
     ]
   },
 
-  // === API エンドポイント === //
-  API: {
-    BASE_URL: '/api/v1',
-    ENDPOINTS: {
-      AUTH: {
-        LOGIN: '/auth/login',
-        LOGOUT: '/auth/logout',
-        REFRESH: '/auth/refresh',
-        PROFILE: '/auth/profile'
-      },
-      USERS: {
-        LIST: '/users',
-        GET: '/users/:id',
-        CREATE: '/users',
-        UPDATE: '/users/:id',
-        DELETE: '/users/:id',
-        SUBORDINATES: '/users/:id/subordinates'
-      },
-      EVALUATIONS: {
-        LIST: '/evaluations',
-        GET: '/evaluations/:id',
-        CREATE: '/evaluations',
-        UPDATE: '/evaluations/:id',
-        DELETE: '/evaluations/:id',
-        SUBMIT: '/evaluations/:id/submit',
-        APPROVE: '/evaluations/:id/approve',
-        REJECT: '/evaluations/:id/reject'
-      },
-      PERIODS: {
-        LIST: '/evaluation-periods',
-        GET: '/evaluation-periods/:id',
-        CREATE: '/evaluation-periods',
-        UPDATE: '/evaluation-periods/:id',
-        DELETE: '/evaluation-periods/:id',
-        ACTIVATE: '/evaluation-periods/:id/activate'
-      },
-      CATEGORIES: {
-        LIST: '/evaluation-categories',
-        GET: '/evaluation-categories/:id',
-        CREATE: '/evaluation-categories',
-        UPDATE: '/evaluation-categories/:id',
-        DELETE: '/evaluation-categories/:id'
-      },
-      DASHBOARD: '/dashboard',
-      REPORTS: '/reports'
-    }
-  },
-
   // === ローカルストレージキー === //
   STORAGE_KEYS: {
     AUTH_TOKEN: 'eval_auth_token',
@@ -350,7 +302,6 @@ EvaluationApp.Constants = {
 if (EvaluationApp.Constants.APP.MODE === 'development') {
   EvaluationApp.Constants.APP.DEBUG = true;
   console.log('評価ツール - デバッグモードで起動');
-  console.log('Constants loaded:', EvaluationApp.Constants);
 }
 
 // 定数を変更不可にする
