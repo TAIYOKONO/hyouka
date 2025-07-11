@@ -1,3 +1,4 @@
+// register.js の全コード
 /**
  * register.js - 新規ユーザー登録ページ (最終版)
  */
@@ -70,6 +71,64 @@ async function handleRegistration(e) {
                 <div class="login-container text-center">
                     <h2>登録申請が完了しました</h2>
                     <p>アカウントが管理者に承認されるまで、しばらくお待ちください。</p>
+                    <a href="#" onclick="router.navigate('/')">ログインページに戻る</a>
+                </div>
+            </div>`;
+    } catch (error) {
+        showNotification(`登録に失敗しました: ${error.message}`, 'error');
+    }
+}
+
+// --- 追加 ---
+
+/**
+ * 管理者登録ページ表示用の関数
+ */
+function showAdminRegistrationForm() {
+    // 他のページコンテンツを非表示にする
+    document.getElementById('main-content').querySelectorAll('.login-page, #admin-registration-page').forEach(el => {
+        if (el.id !== 'admin-registration-page') {
+            el.style.display = 'none';
+        }
+    });
+    
+    // 管理者登録ページを表示
+    const adminRegPage = document.getElementById('admin-registration-page');
+    if (adminRegPage) {
+        adminRegPage.style.display = 'block';
+        
+        // 既存のイベントリスナーを削除してから追加
+        const form = document.getElementById('admin-registration-form');
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        newForm.addEventListener('submit', handleAdminRegistration);
+    }
+}
+
+/**
+ * 管理者登録フォームの送信処理
+ */
+async function handleAdminRegistration(e) {
+    e.preventDefault();
+    const company = document.getElementById('admin-reg-company').value;
+    const name = document.getElementById('admin-reg-name').value;
+    const email = document.getElementById('admin-reg-email').value;
+    const password = document.getElementById('admin-reg-password').value;
+
+    if (!company || !name || !email || !password) {
+        return showNotification("すべての項目を入力してください。", "error");
+    }
+
+    try {
+        const adminData = { company, name, email, password };
+        await api.createAdminForApproval(adminData);
+
+        // 成功メッセージを表示
+        document.getElementById('main-content').innerHTML = `
+            <div class="login-page">
+                <div class="login-container text-center">
+                    <h2>管理者アカウントの登録申請が完了しました</h2>
+                    <p>アカウントが有効化されるまで、しばらくお待ちください。</p>
                     <a href="#" onclick="router.navigate('/')">ログインページに戻る</a>
                 </div>
             </div>`;
