@@ -1,4 +1,4 @@
-// settings.js の全コード（評価構造の編集ロジック実装版）
+// settings.js の全コード（イベントリスナー修正版）
 /**
  * settings.js - 管理者向け設定ページ
  */
@@ -43,13 +43,13 @@ function renderStructureEditor() {
         categoriesHtml = structure.categories.map((category, catIndex) => `
             <div class="category-block" data-cat-index="${catIndex}">
                 <div class="category-header">
-                    <input type="text" value="${category.categoryName}" class="form-control category-name-input" placeholder="カテゴリ名" data-cat-index="${catIndex}">
+                    <input type="text" value="${category.categoryName || ''}" class="form-control category-name-input" placeholder="カテゴリ名" data-cat-index="${catIndex}">
                     <button class="btn btn-danger btn-sm btn-delete-category" data-cat-index="${catIndex}">カテゴリ削除</button>
                 </div>
                 <div class="item-list">
                     ${(category.items || []).map((item, itemIndex) => `
                         <div class="item-row" data-item-index="${itemIndex}">
-                            <input type="text" value="${item.itemName}" class="form-control item-name-input" placeholder="評価項目名">
+                            <input type="text" value="${item.itemName || ''}" class="form-control item-name-input" placeholder="評価項目名">
                             <select class="form-control item-type-select">
                                 <option value="quantitative" ${item.itemType === 'quantitative' ? 'selected' : ''}>定量的</option>
                                 <option value="qualitative" ${item.itemType === 'qualitative' ? 'selected' : ''}>定性的</option>
@@ -99,7 +99,6 @@ async function handleAddJobType() {
 }
 
 async function handleDeleteJobType(id, name) {
-    // 関連する評価構造も削除する旨の警告を追加
     if (!confirm(`「${name}」を削除しますか？\nこの職種に紐づく評価構造もすべて削除されます。`)) return;
     try {
         await window.api.deleteTargetJobType(id);
@@ -139,7 +138,7 @@ async function handleSelectJobType(id) {
 
 function handleAddCategory() {
     if (!settingsState.currentStructure) return;
-    const newCategory = { categoryName: '新しいカテゴリ', items: [] };
+    const newCategory = { categoryName: '', items: [] };
     settingsState.currentStructure.categories.push(newCategory);
     markStructureAsDirty();
     renderStructureEditor();
@@ -147,7 +146,7 @@ function handleAddCategory() {
 
 function handleAddItem(catIndex) {
     if (!settingsState.currentStructure) return;
-    const newItem = { itemName: '新しい評価項目', itemType: 'quantitative' };
+    const newItem = { itemName: '', itemType: 'quantitative' };
     if (!settingsState.currentStructure.categories[catIndex].items) {
         settingsState.currentStructure.categories[catIndex].items = [];
     }
@@ -173,18 +172,25 @@ function handleDeleteItem(catIndex, itemIndex) {
 async function handleSaveStructure() {
     if (!settingsState.currentStructure || !settingsState.selectedJobTypeId) return;
 
-    // 現在のフォームの入力値を読み取ってstateに反映する
     const updatedCategories = [];
-    document.querySelectorAll('.category-block').forEach((catEl, catIndex) => {
-        const categoryName = catEl.querySelector('.category-name-input').value;
+    let validationError = false;
+    document.querySelectorAll('.category-block').forEach((catEl) => {
+        const categoryName = catEl.querySelector('.category-name-input').value.trim();
+        if (!categoryName) validationError = true;
         const items = [];
-        catEl.querySelectorAll('.item-row').forEach((itemEl, itemIndex) => {
-            const itemName = itemEl.querySelector('.item-name-input').value;
+        catEl.querySelectorAll('.item-row').forEach((itemEl) => {
+            const itemName = itemEl.querySelector('.item-name-input').value.trim();
+            if (!itemName) validationError = true;
             const itemType = itemEl.querySelector('.item-type-select').value;
             items.push({ itemName, itemType });
         });
         updatedCategories.push({ categoryName, items });
     });
+
+    if (validationError) {
+        return showNotification('カテゴリ名と項目名は必須です。', 'error');
+    }
+
     settingsState.currentStructure.categories = updatedCategories;
 
     try {
@@ -198,35 +204,40 @@ async function handleSaveStructure() {
     }
 }
 
-
 // --- イベントリスナーの設定 ---
 function setupSettingsPageEventListeners() {
-    document.getElementById('btn-add-job-type')?.addEventListener('click', handleAddJobType);
-    document.getElementById('job-types-list')?.addEventListener('click', (e) => {
-        const target = e.target;
-        if (target.classList.contains('btn-delete-job-type')) {
-            handleDeleteJobType(target.dataset.id, target.dataset.name);
-        } else if (target.closest('.sidebar-list-item')) {
-            handleSelectJobType(target.closest('.sidebar-list-item').dataset.id);
-        }
-    });
+    const mainContent = document.getElementById('main-content');
 
-    // 右側メインエリアのイベントリスナー（イベント委譲）
-    document.getElementById('evaluation-structure-editor')?.addEventListener('click', (e) => {
-        const target = e.target;
-        if (target.id === 'btn-save-structure') handleSaveStructure();
-        if (target.id === 'btn-add-category') handleAddCategory();
-        if (target.classList.contains('btn-add-item')) handleAddItem(parseInt(target.dataset.catIndex));
-        if (target.classList.contains('btn-delete-category')) handleDeleteCategory(parseInt(target.dataset.catIndex));
-        if (target.classList.contains('btn-delete-item')) handleDeleteItem(parseInt(target.dataset.catIndex), parseInt(target.dataset.itemIndex));
-    });
+    // イベントリスナーが重複しないように、一度だけ main-content に設定
+    mainContent.removeEventListener('click', handleSettingsPageClicks);
+    mainContent.addEventListener('click', handleSettingsPageClicks);
 
-    document.getElementById('evaluation-structure-editor')?.addEventListener('input', (e) => {
-        if (e.target.matches('.category-name-input, .item-name-input, .item-type-select')) {
-            markStructureAsDirty();
-        }
-    });
+    mainContent.removeEventListener('input', handleSettingsPageInputs);
+    mainContent.addEventListener('input', handleSettingsPageInputs);
 }
+
+function handleSettingsPageClicks(e) {
+    const target = e.target;
+    if (target.id === 'btn-add-job-type') handleAddJobType();
+    else if (target.closest('.sidebar-list-item') && !target.classList.contains('btn-delete-job-type')) {
+        handleSelectJobType(target.closest('.sidebar-list-item').dataset.id);
+    } 
+    else if (target.classList.contains('btn-delete-job-type')) {
+        handleDeleteJobType(target.dataset.id, target.dataset.name);
+    } 
+    else if (target.id === 'btn-save-structure') handleSaveStructure();
+    else if (target.id === 'btn-add-category') handleAddCategory();
+    else if (target.classList.contains('btn-add-item')) handleAddItem(parseInt(target.dataset.catIndex));
+    else if (target.classList.contains('btn-delete-category')) handleDeleteCategory(parseInt(target.dataset.catIndex));
+    else if (target.classList.contains('btn-delete-item')) handleDeleteItem(parseInt(target.dataset.catIndex), parseInt(target.dataset.itemIndex));
+}
+
+function handleSettingsPageInputs(e) {
+    if (e.target.matches('.category-name-input, .item-name-input, .item-type-select')) {
+        markStructureAsDirty();
+    }
+}
+
 
 // --- メインのページ表示関数 ---
 async function showSettingsPage() {
@@ -255,9 +266,6 @@ async function showSettingsPage() {
             </div>
         </div>`;
 
-    // イベントリスナーを一度だけ設定
-    const newMainContent = mainContent.cloneNode(true);
-    mainContent.parentNode.replaceChild(newMainContent, mainContent);
     setupSettingsPageEventListeners();
 
     try {
