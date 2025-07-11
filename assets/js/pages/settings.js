@@ -1,4 +1,4 @@
-// settings.js の全コード（評価構造の表示ロジック実装版）
+// settings.js の全コード（空の項目エラー修正版）
 /**
  * settings.js - 管理者向け設定ページ
  */
@@ -6,8 +6,8 @@
 let settingsState = {
     jobTypes: [],
     selectedJobTypeId: null,
-    currentStructure: null, // 現在編集中の評価構造を保持
-    isStructureDirty: false, // 変更があったかどうかのフラグ
+    currentStructure: null,
+    isStructureDirty: false,
 };
 
 // --- DOM描画関連の関数 ---
@@ -47,7 +47,7 @@ function renderStructureEditor() {
                     <button class="btn-delete-category" data-cat-index="${catIndex}">カテゴリ削除</button>
                 </div>
                 <div class="item-list">
-                    ${category.items.map((item, itemIndex) => `
+                    ${(category.items || []).map((item, itemIndex) => `
                         <div class="item-row">
                             <input type="text" value="${item.itemName}" class="form-control item-name-input" placeholder="評価項目名">
                             <select class="form-control item-type-select">
