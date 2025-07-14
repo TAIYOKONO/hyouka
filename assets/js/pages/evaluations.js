@@ -97,4 +97,4 @@ async function viewEvaluation(id) {
         console.error("Failed to show evaluation detail:", error);
         mainContent.innerHTML = `<div class="page-content"><p>評価詳細の読み込みに失敗しました。</p></div>`;
     }
-}
+} // <-- 不足していた閉じカッコをここに追加
