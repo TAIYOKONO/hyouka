@@ -1,4 +1,4 @@
-// api.js の全コード（評価構造メソッド追加版）
+// api.js の全コード（createEvaluation修正版）
 /**
  * API通信クライアント (最終版)
  */
@@ -40,7 +40,6 @@ class ApiClient {
         await this.db.collection('users').doc(userId).update({ status: 'active' });
     }
 
-    // 管理者登録 (テナントIDは不要)
     async createAdminForApproval(adminData) {
         const userCredential = await this.auth.createUserWithEmailAndPassword(adminData.email, adminData.password);
         await this.db.collection('users').doc(userCredential.user.uid).set({
@@ -54,7 +53,6 @@ class ApiClient {
         await this.auth.signOut();
     }
 
-    // 一般ユーザーの登録
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
@@ -74,7 +72,6 @@ class ApiClient {
         await this.auth.signOut();
     }
 
-    // 招待状の作成
     async createInvitation(invitationData) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
@@ -113,11 +110,15 @@ class ApiClient {
 
     async createEvaluation(evaluationData) {
         const tenantId = this._getTenantId();
-        if (!tenantId) throw new Error("テナント情報が取得できません。");
-        
+        const currentUser = window.authManager.getCurrentUser();
+        if (!tenantId || !currentUser) throw new Error("テナント情報またはユーザー情報が取得できません。");
+
         const dataWithTimestamp = { 
             ...evaluationData,
             tenantId: tenantId,
+            evaluatorId: currentUser.uid,
+            evaluatorName: currentUser.name,
+            status: 'submitted', // ステータスを「提出済」に
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -159,31 +160,23 @@ class ApiClient {
     async deleteTargetJobType(jobTypeId) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
-
         const docRef = this.db.collection('targetJobTypes').doc(jobTypeId);
         const doc = await docRef.get();
-
         if (!doc.exists || doc.data().tenantId !== tenantId) {
             throw new Error("削除するドキュメントが見つからないか、権限がありません。");
         }
-        
         await docRef.delete();
     }
 
-    // --- ▼▼▼ ここから追加 ▼▼▼ ---
     async getEvaluationStructure(jobTypeId) {
         const tenantId = this._getTenantId();
         if (!tenantId || !jobTypeId) return null;
-
         const snapshot = await this.db.collection('evaluationStructures')
             .where('tenantId', '==', tenantId)
             .where('jobTypeId', '==', jobTypeId)
             .limit(1)
             .get();
-
-        if (snapshot.empty) {
-            return null; // まだ構造が作成されていない
-        }
+        if (snapshot.empty) return null;
         const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() };
     }
@@ -191,42 +184,14 @@ class ApiClient {
     async saveEvaluationStructure(structureId, structureData) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
-
         const dataToSave = { ...structureData, tenantId: tenantId };
-        
         if (structureId) {
-            // 既存の構造を更新
             await this.db.collection('evaluationStructures').doc(structureId).set(dataToSave, { merge: true });
             return structureId;
         } else {
-            // 新しい構造を作成
             const docRef = await this.db.collection('evaluationStructures').add(dataToSave);
             return docRef.id;
         }
-    }
-    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
-
-    // 評価項目は、今後のステップ2.1で構造が大きく変わるため、ここでは暫定的に修正します
-    async getEvaluationItems() {
-        const tenantId = this._getTenantId();
-        if (!tenantId) return [];
-        const snapshot = await this.db.collection('evaluationItems')
-            .where('tenantId', '==', tenantId)
-            .orderBy('order', 'asc').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
-
-    async createEvaluationItem(itemData) {
-        const tenantId = this._getTenantId();
-        if (!tenantId) throw new Error("テナント情報が取得できません。");
-        await this.db.collection('evaluationItems').add({
-            ...itemData,
-            tenantId: tenantId,
-        });
-    }
-
-    async deleteEvaluationItem(id) {
-        await this.db.collection('evaluationItems').doc(id).delete();
     }
 }
 window.api = new ApiClient();
