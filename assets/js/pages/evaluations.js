@@ -72,7 +72,6 @@ async function viewEvaluation(id) {
         const structure = await api.getEvaluationStructure(evaluation.jobTypeId);
         if (!structure) throw new Error("評価構造データが見つかりません。");
 
-        // --- 描画用のデータ準備 ---
         const quantitativeItems = [];
         const qualitativeItems = [];
         structure.categories.forEach(category => {
@@ -95,8 +94,7 @@ async function viewEvaluation(id) {
         if (currentUser.role === 'evaluator' && evaluation.status === 'submitted') {
             actionButtonsHTML = `<button id="btn-approve-primary" class="btn btn-success">一次承認する</button>`;
         }
-        // 今後のステップで管理者用の最終承認ボタンもここに追加
-
+        
         mainContent.innerHTML = `
             <div class="page">
                 <div class="page-header">
@@ -114,10 +112,41 @@ async function viewEvaluation(id) {
                         <div><strong>総合評価:</strong> ${evaluation.overallRating}/5 ⭐</div>
                         <div><strong>ステータス:</strong> ${evaluation.status}</div>
                     </div>
+                    <div class="evaluation-graphs">
+                        <div class="evaluation-chart">
+                            <h4>定量的評価チャート</h4>
+                            <div class="chart-container"><div id="detail-quantitative-chart"></div></div>
+                        </div>
+                        <div class="evaluation-chart">
+                            <h4>定性的評価チャート</h4>
+                            <div class="chart-container"><div id="detail-qualitative-chart"></div></div>
+                        </div>
                     </div>
+                    <div class="evaluation-details-section">
+                        <h3>詳細評価</h3>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead><tr><th>カテゴリ</th><th>評価項目</th><th>スコア</th><th>コメント</th></tr></thead>
+                                <tbody>
+                                    ${[...quantitativeItems, ...qualitativeItems].map(item => `
+                                        <tr>
+                                            <td>${item.categoryName}</td>
+                                            <td>${item.itemName}</td>
+                                            <td>${item.score.toFixed(1)}</td>
+                                            <td>${item.comment || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <h3>総合コメント</h3>
+                        <p class="comment-box">${evaluation.overallComment || 'コメントはありません。'}</p>
+                    </div>
+                </div>
             </div>`;
         
-        // イベントリスナーとチャート描画
         document.getElementById('btn-back-to-list-detail').addEventListener('click', () => router.navigate('/evaluations'));
         
         const approveBtn = document.getElementById('btn-approve-primary');
@@ -135,7 +164,13 @@ async function viewEvaluation(id) {
                 }
             });
         }
-        // ...チャート描画のロジックは前回と同じ...
+        
+        if (quantitativeItems.length > 0) {
+            new PolygonChart('detail-quantitative-chart', quantitativeItems, quantitativeItems.map(i => i.score));
+        }
+        if (qualitativeItems.length > 0) {
+            new PolygonChart('detail-qualitative-chart', qualitativeItems, qualitativeItems.map(i => i.score));
+        }
 
     } catch (error) {
         console.error("Failed to show evaluation detail:", error);
