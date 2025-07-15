@@ -1,4 +1,4 @@
-// components/evaluation-form.js の全コード（タブUI版）
+// components/evaluation-form.js の全コード（保存機能実装版）
 /**
  * 評価入力フォームコンポーネント
  */
@@ -142,19 +142,25 @@ class EvaluationForm {
         const selectedUser = this.allUsers.find(u => u.id === subordinateId);
 
         const ratings = {};
-        form.querySelectorAll('.rating-input').forEach(input => {
-            if (input.value) {
-                const catIndex = input.dataset.catIndex;
-                const itemIndex = input.dataset.itemIndex;
-                const key = `cat${catIndex}_item${itemIndex}`;
-                ratings[key] = {
-                    score: parseFloat(input.value),
-                    comment: form.querySelector(`.comment-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`).value
-                };
-            }
-        });
+        if (this.currentStructure && this.currentStructure.categories) {
+            this.currentStructure.categories.forEach((category, catIndex) => {
+                (category.items || []).forEach((item, itemIndex) => {
+                    const scoreInput = form.querySelector(`.rating-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
+                    const commentInput = form.querySelector(`.comment-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
+                    
+                    if (scoreInput && scoreInput.value) {
+                        // 一意なキーを生成（カテゴリ名と項目名を利用）
+                        const key = `${category.categoryName}_${item.itemName}`;
+                        ratings[key] = {
+                            score: parseFloat(scoreInput.value),
+                            comment: commentInput ? commentInput.value : ''
+                        };
+                    }
+                });
+            });
+        }
 
-        const scores = Object.values(ratings).map(r => r.score).filter(s => s);
+        const scores = Object.values(ratings).map(r => r.score).filter(s => !isNaN(s));
         const overallRating = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0;
 
         return {
