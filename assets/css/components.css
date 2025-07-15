@@ -265,4 +265,28 @@
     border-radius: var(--card-border-radius);
     color: var(--color-text-secondary);
     border: 2px dashed var(--border-color);
+}}}}
+/* --- タブコンポーネント --- */
+.tab-navigation {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: var(--spacing-lg);
+}
+.tab-item {
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+.tab-item.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+.tab-panel {
+    display: none;
+}
+.tab-panel.active {
+    display: block;表示：ブロック;
 }
