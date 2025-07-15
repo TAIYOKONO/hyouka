@@ -1,4 +1,3 @@
-// api.js の全コード（createEvaluation修正版）
 /**
  * API通信クライアント (最終版)
  */
@@ -118,7 +117,7 @@ class ApiClient {
             tenantId: tenantId,
             evaluatorId: currentUser.uid,
             evaluatorName: currentUser.name,
-            status: 'submitted', // ステータスを「提出済」に
+            status: 'submitted',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -134,6 +133,23 @@ class ApiClient {
         }
         return { id: doc.id, ...doc.data() };
     }
+
+    // --- ▼▼▼ ここから追加 ▼▼▼ ---
+    async updateEvaluationStatus(evaluationId, status) {
+        const tenantId = this._getTenantId();
+        const docRef = this.db.collection('evaluations').doc(evaluationId);
+        const doc = await docRef.get();
+
+        if (!doc.exists || doc.data().tenantId !== tenantId) {
+            throw new Error("対象の評価が見つからないか、権限がありません。");
+        }
+
+        await docRef.update({
+            status: status,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
     async getTargetJobTypes() {
         const tenantId = this._getTenantId();
