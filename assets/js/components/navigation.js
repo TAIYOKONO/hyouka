@@ -1,3 +1,4 @@
+// navigation.js の全コード（モバイルナビゲーション対応版）
 /**
  * navigation.js - グローバルナビゲーション管理 (最終版)
  */
@@ -9,53 +10,40 @@ class NavigationManager {
 
     async render() {
         this.currentUser = authManager.getCurrentUser();
-        
         const header = document.getElementById('app-header');
-        if (!header) return;
-
-        if (!this.currentUser) {
-            header.style.display = 'none';
+        if (!header || !this.currentUser) {
+            if(header) header.style.display = 'none';
             return;
         }
-
         header.style.display = 'block';
 
-        const notifications = await api.getNotificationsForUser(this.currentUser.uid);
-        this.setupMenuItems(notifications.length);
+        this.setupMenuItems();
         
         header.innerHTML = `
             <div class="header-content">
-                <div class="logo"><a href="#/dashboard" class="nav-link-logo">🏗️ 建設業評価システム</a></div>
+                <div class="logo"><a href="#/dashboard"><h1>評価システム</h1></a></div>
                 <nav class="main-navigation">
-                    <ul class="nav-menu" id="nav-menu">${this.renderMenuItems()}</ul>
+                    <ul class="nav-menu">${this.renderMenuItems()}</ul>
                 </nav>
                 <div class="user-menu">
                     ${this.renderUserInfo()}
-                    <div class="language-selector">
-                        <select id="language-select" onchange="i18n.setLanguage(this.value)">
-                            <option value="ja">🇯🇵 日本語</option>
-                            <option value="en">🇬🇧 English</option>
-                            <option value="id">🇮🇩 Indonesia</option>
-                            <option value="vi">🇻🇳 Tiếng Việt</option>
-                        </select>
-                    </div>
-                    <button id="logout-button" class="btn btn-secondary">ログアウト</button>
+                    <button id="logout-button" class="btn btn-secondary btn-sm">ログアウト</button>
                 </div>
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
             </div>
-            <div class="mobile-nav-menu" id="mobile-nav-menu">
-                <ul>${this.renderMenuItems(true)}</ul>
-            </div>
+            <ul class="mobile-nav-menu" id="mobile-nav-menu">
+                ${this.renderMenuItems(true)}
+                <li><a href="#" id="mobile-logout-button">ログアウト</a></li>
+            </ul>
         `;
         this.attachEventListeners();
     }
 
-    setupMenuItems(notificationCount = 0) {
-        const userManagementLabel = `ユーザー管理 ${notificationCount > 0 ? `<span class="notification-badge">${notificationCount}</span>` : ''}`;
+    setupMenuItems() {
         this.menuItems = [
             { id: 'dashboard', label: 'ダッシュボード', path: '#/dashboard', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'evaluations', label: '評価一覧', path: '#/evaluations', roles: ['admin', 'evaluator', 'worker'] },
-            { id: 'users', label: userManagementLabel, path: '#/users', roles: ['admin', 'evaluator'] },
+            { id: 'users', label: 'ユーザー管理', path: '#/users', roles: ['admin', 'evaluator'] },
             { id: 'settings', label: '評価項目設定', path: '#/settings', roles: ['admin'] },
         ];
     }
@@ -78,12 +66,13 @@ class NavigationManager {
                     <div class="user-name">${this.currentUser.name}</div>
                     <div class="user-role">${roleName}</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     attachEventListeners() {
-        document.getElementById('logout-button')?.addEventListener('click', () => {
+        document.getElementById('logout-button')?.addEventListener('click', () => authManager.logout());
+        document.getElementById('mobile-logout-button')?.addEventListener('click', (e) => {
+            e.preventDefault();
             authManager.logout();
         });
 
@@ -92,20 +81,17 @@ class NavigationManager {
         if(toggleButton && mobileMenu) {
             toggleButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                mobileMenu.classList.toggle('open');
+                // メニューの表示/非表示を切り替える
+                mobileMenu.style.display = mobileMenu.style.display === 'block' ? 'none' : 'block';
             });
         }
 
+        // メニューの外側をクリックしたときにメニューを閉じる
         document.addEventListener('click', (e) => {
-            if (mobileMenu && mobileMenu.classList.contains('open') && !mobileMenu.contains(e.target) && !toggleButton.contains(e.target)) {
-                mobileMenu.classList.remove('open');
+            if (mobileMenu && mobileMenu.style.display === 'block' && !header.contains(e.target)) {
+                mobileMenu.style.display = 'none';
             }
         });
-        
-        const langSelect = document.getElementById('language-select');
-        if (langSelect && window.i18n) {
-            langSelect.value = window.i18n.currentLanguage;
-        }
     }
 }
 
