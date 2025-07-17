@@ -1,4 +1,4 @@
-// components/evaluation-form.js の全コード（保存機能実装版）
+// components/evaluation-form.js の全コード（イベント重複防止版）
 /**
  * 評価入力フォームコンポーネント
  */
@@ -10,14 +10,47 @@ class EvaluationForm {
         this.allUsers = [];
         this.allJobTypes = [];
         this.currentStructure = null;
+        this.container = null; // コンテナをプロパティとして保持
     }
 
     async openNewEvaluation() {
-        const container = document.getElementById('evaluation-form-container');
-        if (!container) return;
-        container.innerHTML = this.getFormHTML();
+        this.container = document.getElementById('evaluation-form-container');
+        if (!this.container) return;
+        
+        // イベントリスナーを一度だけ設定
+        this.bindEventsOnce();
+
+        this.container.innerHTML = this.getFormHTML();
         await this.loadInitialData();
-        this.bindEvents();
+    }
+
+    // ▼▼▼ イベントリスナーの登録を初回のみに限定 ▼▼▼
+    bindEventsOnce() {
+        if (this.eventsBound) return; // 既に登録済みなら何もしない
+
+        this.container.addEventListener('submit', e => {
+            if (e.target.id === 'evaluation-form') {
+                e.preventDefault();
+                this.handleSubmit();
+            }
+        });
+
+        this.container.addEventListener('change', e => {
+            if (e.target.id === 'job-type-select') {
+                this.handleJobTypeChange(e.target.value);
+            }
+        });
+
+        this.container.addEventListener('click', e => {
+            if (e.target.matches('.tab-item')) {
+                const tabId = e.target.dataset.tab;
+                this.activateTab(tabId);
+            } else if (e.target.id === 'cancel-btn') {
+                router.navigate('/evaluations');
+            }
+        });
+
+        this.eventsBound = true;
     }
 
     async loadInitialData() {
@@ -46,38 +79,12 @@ class EvaluationForm {
         });
     }
 
-    bindEvents() {
-        const form = document.getElementById('evaluation-form');
-        if (!form) return;
-        
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleSubmit();
-        });
-
-        form.addEventListener('change', e => {
-            if (e.target.id === 'job-type-select') {
-                this.handleJobTypeChange(e.target.value);
-            }
-        });
-
-        const tabContainer = document.querySelector('.tab-navigation');
-        if(tabContainer) {
-            tabContainer.addEventListener('click', e => {
-                if (e.target.matches('.tab-item')) {
-                    const tabId = e.target.dataset.tab;
-                    this.activateTab(tabId);
-                }
-            });
-        }
-    }
-    
     activateTab(tabId) {
-        document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        this.container.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+        this.container.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
         
-        document.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
-        document.getElementById(tabId).classList.add('active');
+        this.container.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
+        this.container.querySelector(`#${tabId}`).classList.add('active');
     }
 
     async handleJobTypeChange(jobTypeId) {
@@ -108,10 +115,8 @@ class EvaluationForm {
             quantitativeContainer.innerHTML = '<p>この職種には評価項目が設定されていません。</p>';
             return;
         }
-
         const quantitativeHtml = [];
         const qualitativeHtml = [];
-
         this.currentStructure.categories.forEach((category, catIndex) => {
             (category.items || []).forEach((item, itemIndex) => {
                 const itemHtml = `
@@ -130,7 +135,6 @@ class EvaluationForm {
                 }
             });
         });
-
         quantitativeContainer.innerHTML = quantitativeHtml.length ? quantitativeHtml.join('') : '<p>定量的評価の項目はありません。</p>';
         qualitativeContainer.innerHTML = qualitativeHtml.length ? qualitativeHtml.join('') : '<p>定性的評価の項目はありません。</p>';
     }
@@ -140,16 +144,13 @@ class EvaluationForm {
         const formData = new FormData(form);
         const subordinateId = formData.get('subordinateId');
         const selectedUser = this.allUsers.find(u => u.id === subordinateId);
-
         const ratings = {};
         if (this.currentStructure && this.currentStructure.categories) {
             this.currentStructure.categories.forEach((category, catIndex) => {
                 (category.items || []).forEach((item, itemIndex) => {
                     const scoreInput = form.querySelector(`.rating-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
                     const commentInput = form.querySelector(`.comment-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
-                    
                     if (scoreInput && scoreInput.value) {
-                        // 一意なキーを生成（カテゴリ名と項目名を利用）
                         const key = `${category.categoryName}_${item.itemName}`;
                         ratings[key] = {
                             score: parseFloat(scoreInput.value),
@@ -159,10 +160,8 @@ class EvaluationForm {
                 });
             });
         }
-
         const scores = Object.values(ratings).map(r => r.score).filter(s => !isNaN(s));
         const overallRating = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0;
-
         return {
             subordinateId: subordinateId,
             subordinateName: selectedUser?.name || '',
@@ -195,7 +194,7 @@ class EvaluationForm {
                 <div class="page-header">
                     <h1 id="form-title">新規評価作成</h1>
                     <div>
-                        <button type="button" class="btn-cancel" id="cancel-btn" onclick="router.navigate('/evaluations')">キャンセル</button>
+                        <button type="button" class="btn-cancel" id="cancel-btn">キャンセル</button>
                         <button type="submit" class="btn btn-primary" id="submit-btn" form="evaluation-form">評価を提出</button>
                     </div>
                 </div>
@@ -222,22 +221,16 @@ class EvaluationForm {
                                 </div>
                             </div>
                         </div>
-
                         <div class="tab-ui">
                             <div class="tab-navigation">
                                 <div class="tab-item active" data-tab="quantitative-panel">定量的評価</div>
                                 <div class="tab-item" data-tab="qualitative-panel">定性的評価</div>
                             </div>
                             <div class="tab-content">
-                                <div id="quantitative-panel" class="tab-panel active">
-                                    <div id="quantitative-items"></div>
-                                </div>
-                                <div id="qualitative-panel" class="tab-panel">
-                                    <div id="qualitative-items"></div>
-                                </div>
+                                <div id="quantitative-panel" class="tab-panel active"><div id="quantitative-items"></div></div>
+                                <div id="qualitative-panel" class="tab-panel"><div id="qualitative-items"></div></div>
                             </div>
                         </div>
-
                         <div class="form-section">
                             <h3>総合コメント</h3>
                             <div class="form-group">
