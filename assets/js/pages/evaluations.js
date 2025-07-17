@@ -1,4 +1,4 @@
-// evaluations.js の全コード（変数名タイポ修正版）
+// evaluations.js の全コード（構文エラー最終修正版）
 /**
  * evaluations.js - 評価関連ページ
  */
@@ -7,9 +7,7 @@ async function showEvaluations() {
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧' }]);
     
     const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;mainContent.innerHTML = `
-評価一覧を読み込み中...
-`;`;
+    mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;
 
     try {
         const evaluations = await api.getEvaluations();
@@ -70,8 +68,7 @@ async function viewEvaluation(id) {
         
         const { quantitativeItems, qualitativeItems } = prepareItemsForDisplay(structure, evaluation);
 
-        // ▼▼▼ otherPastEvaluations を pastEvaluations に修正 ▼▼▼
-        mainContent.innerHTML = getEvaluationDetailHTML(evaluation, pastEvaluations.filter(e => e.id !== id));
+        mainContent.innerHTML = getEvaluationDetailHTML(evaluation, pastEvaluations.filter(e => e.id !== id), quantitativeItems, qualitativeItems);
         
         renderEvaluationDetails(quantitativeItems, qualitativeItems);
         attachEventListeners(id, evaluation, { quantitativeItems, qualitativeItems }, pastEvaluations);
@@ -82,7 +79,6 @@ async function viewEvaluation(id) {
     }
 }
 
-// --- viewEvaluationのヘルパー関数群 ---
 function prepareItemsForDisplay(structure, evaluation) {
     if (!structure || !evaluation) return { quantitativeItems: [], qualitativeItems: [] };
     const quantitativeItems = [];
@@ -99,7 +95,7 @@ function prepareItemsForDisplay(structure, evaluation) {
     return { quantitativeItems, qualitativeItems };
 }
 
-function getEvaluationDetailHTML(evaluation, otherPastEvaluations) {
+function getEvaluationDetailHTML(evaluation, otherPastEvaluations, quantitativeItems, qualitativeItems) {
     const currentUser = window.authManager.getCurrentUser();
     let actionButtonsHTML = '';
     if (currentUser.role === 'evaluator' && evaluation.status === 'submitted') {
