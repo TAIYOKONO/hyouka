@@ -1,4 +1,3 @@
-/* components.css の全コード（テーブル回り込み防止版） */
 /**
  * components.css - コンポーネント専用スタイル
  */
@@ -7,7 +6,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    border: none;国境：なし;
+    border: none;
     border-radius: 6px;
     font-size: 1rem;
     font-weight: var(--font-weight-medium);
@@ -15,41 +14,33 @@
     text-decoration: none;
     transition: opacity 0.2s;
 }
-
 .btn-primary {
     background-color: var(--color-primary);
     color: var(--color-white);
 }
-
 .btn-secondary {
     background-color: #6c757d;
     color: var(--color-white);
 }
-
 .btn-success {
     background-color: #198754;
     color: var(--color-white);
 }
-
 .btn-danger {
     background-color: #dc3545;
     color: var(--color-white);
 }
-
 .btn:hover {
     opacity: 0.85;
 }
-
 .form-group {
     margin-bottom: 1rem;
 }
-
 .form-group label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: var(--font-weight-semibold);
 }
-
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -59,48 +50,40 @@
     border-radius: 4px;
     font-size: 1rem;
 }
-
 .table-container {
     background: var(--color-white);
     border-radius: var(--card-border-radius);
-    overflow-x: auto; /* 横スクロールを有効に */
+    overflow-x: auto;
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
 }
-
 .table {
     width: 100%;
     border-collapse: collapse;
 }
-
 .table th,
 .table td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
-    white-space: nowrap; /* ▼▼▼ この行を追加 ▼▼▼ */
+    white-space: nowrap;
 }
-
 .table th {
     background: var(--color-background-secondary);
     font-weight: var(--font-weight-semibold);
 }
-
 .table tr:last-child td {
     border-bottom: none;
 }
-
 .table tr:hover {
     background-color: #f5f5f5;
 }
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
 }
-
 .stat-card {
     background: var(--color-white);
     padding: var(--spacing-lg);
@@ -108,20 +91,16 @@
     box-shadow: var(--card-shadow);
     text-align: center;
 }
-
 .stat-number {
     font-size: 2rem;
     font-weight: var(--font-weight-bold);
     color: var(--color-primary);
 }
-
 .stat-label {
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     margin-top: 0.5rem;
 }
-
-/* --- 招待モーダル --- */
 .modal {
     display: none;
     position: fixed;
@@ -133,13 +112,11 @@
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
 }
-
 .modal.show {
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
 .modal-content {
     position: relative;
     background-color: #fefefe;
@@ -152,12 +129,10 @@
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
     animation: fadeIn 0.3s;
 }
-
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
 .modal-header {
     padding: 10px 16px;
     border-bottom: 1px solid #ddd;
@@ -165,12 +140,10 @@
     justify-content: space-between;
     align-items: center;
 }
-
 .modal-title {
     margin: 0;
     font-size: 1.25rem;
 }
-
 .modal-close {
     color: #aaa;
     font-size: 28px;
@@ -179,16 +152,12 @@
     background: none;
     border: none;
 }
-
 .modal-close:hover {
     color: black;
 }
-
 .modal-body {
     padding: 16px;
 }
-
-/* --- 通知バッジ --- */
 .notification-badge {
     display: inline-block;
     padding: 2px 6px;
@@ -199,14 +168,11 @@
     border-radius: 10px;
     margin-left: 4px;
 }
-
-/* --- 設定ページレイアウト --- */
 .settings-layout {
     display: flex;
     gap: var(--spacing-xl);
     align-items: flex-start;
 }
-
 .settings-sidebar {
     flex: 0 0 280px;
     background: var(--color-background-secondary);
@@ -214,7 +180,6 @@
     padding: var(--spacing-md);
     border: 1px solid var(--border-color);
 }
-
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -223,18 +188,15 @@
     border-bottom: 1px solid var(--border-color);
     margin-bottom: var(--spacing-md);
 }
-
 .sidebar-header h3 {
     margin: 0;
     font-size: var(--font-size-lg);
 }
-
 .sidebar-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
-
 .sidebar-list-item {
     display: flex;
     justify-content: space-between;
@@ -244,22 +206,18 @@
     cursor: pointer;
     transition: background-color 0.2s;
 }
-
 .sidebar-list-item:hover {
     background-color: #e9ecef;
 }
-
 .sidebar-list-item.active {
     background-color: var(--color-primary-100);
     color: var(--color-primary);
     font-weight: var(--font-weight-semibold);
 }
-
 .settings-main {
     flex: 1;
     min-width: 0;
 }
-
 #evaluation-structure-editor .placeholder-text {
     text-align: center;
     padding: 4rem;
@@ -268,8 +226,6 @@
     color: var(--color-text-secondary);
     border: 2px dashed var(--border-color);
 }
-
-/* --- 表示切り替えボタン --- */
 .view-switcher {
     margin-bottom: var(--spacing-md);
     text-align: right;
@@ -278,9 +234,6 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
 }
-/* components.css の末尾に追記 */
-
-/* --- 評価入力フォーム（左右分割） --- */
 .evaluation-item-row-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -289,38 +242,14 @@
     padding-bottom: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
 }
-
-.evaluation-item-row-grid .form-group {
-    margin-bottom: 0;
-}
-
-.evaluation-item-row-grid h5 {
-    margin-bottom: var(--spacing-md);
-    font-size: var(--font-size-base);
-    color: var(--color-text-primary);
-}}
-/* components.css の末尾に追記 */
-
-/* --- 評価入力フォーム（左右分割） --- */
-.evaluation-item-row-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-xl);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-}
-
 .evaluation-item-row-grid .form-group {
     margin-bottom: 0.5rem;
 }
-
 .evaluation-item-row-grid h5 {
     margin-bottom: var(--spacing-md);
     font-size: var(--font-size-base);
     color: var(--color-text-primary);
 }
-
 .evaluation-form-header {
     display: flex;
     justify-content: space-between;
@@ -329,7 +258,6 @@
     border-bottom: 1px solid var(--border-color);
     margin-bottom: var(--spacing-lg);
 }
-
 .evaluation-form-header-info {
     display: flex;
     gap: var(--spacing-xl);
