@@ -7,7 +7,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
-    border: none;
+    border: none;国境：なし;
     border-radius: 6px;
     font-size: 1rem;
     font-weight: var(--font-weight-medium);
@@ -299,3 +299,38 @@
     font-size: var(--font-size-base);
     color: var(--color-text-primary);
 }}
+/* components.css の末尾に追記 */
+
+/* --- 評価入力フォーム（左右分割） --- */
+.evaluation-item-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.evaluation-item-row-grid .form-group {
+    margin-bottom: 0.5rem;
+}
+
+.evaluation-item-row-grid h5 {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+}
+
+.evaluation-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.evaluation-form-header-info {
+    display: flex;
+    gap: var(--spacing-xl);
+}
