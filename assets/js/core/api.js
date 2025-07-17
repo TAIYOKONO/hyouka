@@ -1,3 +1,4 @@
+// api.js の全コード（新評価データ構造対応版）
 /**
  * API通信クライアント (最終版)
  */
@@ -7,7 +8,6 @@ class ApiClient {
         this.auth = firebase.auth();
     }
 
-    // 現在のユーザーのテナントIDを取得するヘルパー
     _getTenantId() {
         const currentUser = window.authManager.getCurrentUser();
         if (!currentUser || !currentUser.tenantId) {
@@ -42,11 +42,8 @@ class ApiClient {
     async createAdminForApproval(adminData) {
         const userCredential = await this.auth.createUserWithEmailAndPassword(adminData.email, adminData.password);
         await this.db.collection('users').doc(userCredential.user.uid).set({
-            name: adminData.name,
-            email: adminData.email,
-            company: adminData.company,
-            role: 'admin',
-            status: 'developer_approval_pending',
+            name: adminData.name, email: adminData.email, company: adminData.company,
+            role: 'admin', status: 'developer_approval_pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
         await this.auth.signOut();
@@ -56,25 +53,25 @@ class ApiClient {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
         if (!invitationDoc.exists || invitationDoc.data().used) throw new Error("無効な招待です。");
-        
         const tenantId = invitationDoc.data().tenantId;
         if (!tenantId) throw new Error("招待情報にテナント情報が含まれていません。");
-
-        const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
-        await this.db.collection('users').doc(userCredential.user.uid).set({
-            name: userData.name, email: userData.email, role: userData.role,
-            department: userData.department, position: userData.position, employeeId: userData.employeeId,
-            status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            tenantId: tenantId,
-        });
-        await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
-        await this.auth.signOut();
+        try {
+            const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
+            await this.db.collection('users').doc(userCredential.user.uid).set({
+                name: userData.name, email: userData.email, role: userData.role,
+                department: userData.department, position: userData.position, employeeId: userData.employeeId,
+                status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                tenantId: tenantId,
+            });
+            await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
+        } finally {
+            await this.auth.signOut();
+        }
     }
 
     async createInvitation(invitationData) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
-        
         const docRef = await this.db.collection('invitations').add({
             ...invitationData,
             tenantId: tenantId,
@@ -89,15 +86,6 @@ class ApiClient {
         return doc.exists ? { id: doc.id, ...doc.data() } : null;
     }
 
-    async getNotificationsForUser(userId) {
-        try {
-            const snapshot = await this.db.collection('user_notifications')
-                .where('recipientUid', '==', userId).where('isRead', '==', false)
-                .orderBy('createdAt', 'desc').get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) { return []; }
-    }
-
     async getEvaluations() {
         const tenantId = this._getTenantId();
         if (!tenantId) return [];
@@ -107,22 +95,24 @@ class ApiClient {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
+    // ▼▼▼ この関数を修正します ▼▼▼
     async createEvaluation(evaluationData) {
         const tenantId = this._getTenantId();
         const currentUser = window.authManager.getCurrentUser();
         if (!tenantId || !currentUser) throw new Error("テナント情報またはユーザー情報が取得できません。");
 
-        const dataWithTimestamp = { 
+        const dataToSave = { 
             ...evaluationData,
             tenantId: tenantId,
-            evaluatorId: currentUser.uid,
-            evaluatorName: currentUser.name,
-            status: 'submitted',
+            // 評価フローの最初の提出者（自己評価を行った人）を記録
+            submittedById: currentUser.uid, 
+            submittedByName: currentUser.name,
+            status: 'self_assessed', // 新しいステータス: 自己評価完了
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        const docRef = await this.db.collection('evaluations').add(dataWithTimestamp);
-        return { id: docRef.id, ...dataWithTimestamp };
+        const docRef = await this.db.collection('evaluations').add(dataToSave);
+        return { id: docRef.id, ...dataToSave };
     }
 
     async getEvaluationById(id) {
@@ -133,37 +123,31 @@ class ApiClient {
         }
         return { id: doc.id, ...doc.data() };
     }
-
+    
     async updateEvaluationStatus(evaluationId, status) {
         const tenantId = this._getTenantId();
         const docRef = this.db.collection('evaluations').doc(evaluationId);
         const doc = await docRef.get();
-
         if (!doc.exists || doc.data().tenantId !== tenantId) {
             throw new Error("対象の評価が見つからないか、権限がありません。");
         }
-
         await docRef.update({
             status: status,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
 
-    // --- ▼▼▼ ここから追加 ▼▼▼ ---
     async getPastEvaluationsForUser(subordinateId) {
         const tenantId = this._getTenantId();
         if (!tenantId || !subordinateId) return [];
-    
         const snapshot = await this.db.collection('evaluations')
             .where('tenantId', '==', tenantId)
             .where('subordinateId', '==', subordinateId)
-            .where('status', '==', 'completed') // ステータスが完了のものに限定
+            .where('status', '==', 'completed')
             .orderBy('updatedAt', 'desc')
             .get();
-    
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
-    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
     async getTargetJobTypes() {
         const tenantId = this._getTenantId();
