@@ -3,7 +3,7 @@
  */
 .btn {
     display: inline-flex;
-    align-items: center;
+    align-items: center;Align-Items：Center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
     border: none;
@@ -11,7 +11,7 @@
     font-size: 1rem;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
-    text-decoration: none;
+    text-decoration: none;テキスト装置：なし;
     transition: opacity 0.2s;
 }
 
@@ -62,9 +62,10 @@
 .table-container {
     background: var(--color-white);
     border-radius: var(--card-border-radius);
-    overflow: hidden;
+    overflow-x: auto; /* ← ここを修正 */
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
+}
 }
 
 .table {
