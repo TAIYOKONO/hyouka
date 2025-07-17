@@ -1,4 +1,3 @@
-// api.js の全コード（登録フロー修正版）
 /**
  * API通信クライアント (最終版)
  */
@@ -8,7 +7,7 @@ class ApiClient {
         this.auth = firebase.auth();
     }
 
-    // （...他のメソッドは変更ありません...）
+    // 現在のユーザーのテナントIDを取得するヘルパー
     _getTenantId() {
         const currentUser = window.authManager.getCurrentUser();
         if (!currentUser || !currentUser.tenantId) {
@@ -53,7 +52,6 @@ class ApiClient {
         await this.auth.signOut();
     }
 
-    // ▼▼▼ この関数を修正します ▼▼▼
     async createUserWithPendingApproval(userData) {
         const invitationRef = this.db.collection('invitations').doc(userData.token);
         const invitationDoc = await invitationRef.get();
@@ -62,26 +60,21 @@ class ApiClient {
         const tenantId = invitationDoc.data().tenantId;
         if (!tenantId) throw new Error("招待情報にテナント情報が含まれていません。");
 
-        try {
-            const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
-            await this.db.collection('users').doc(userCredential.user.uid).set({
-                name: userData.name, email: userData.email, role: userData.role,
-                department: userData.department, position: userData.position, employeeId: userData.employeeId,
-                status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                tenantId: tenantId,
-            });
-            await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
-        } finally {
-            // 成功しても失敗しても、必ずサインアウトさせる
-            await this.auth.signOut();
-        }
+        const userCredential = await this.auth.createUserWithEmailAndPassword(userData.email, userData.password);
+        await this.db.collection('users').doc(userCredential.user.uid).set({
+            name: userData.name, email: userData.email, role: userData.role,
+            department: userData.department, position: userData.position, employeeId: userData.employeeId,
+            status: 'pending_approval', createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            tenantId: tenantId,
+        });
+        await invitationRef.update({ used: true, usedBy: userCredential.user.uid });
+        await this.auth.signOut();
     }
-    // ▲▲▲ 修正ここまで ▲▲▲
 
-    // （...以降のメソッドは変更ありません...）
     async createInvitation(invitationData) {
         const tenantId = this._getTenantId();
         if (!tenantId) throw new Error("テナント情報が取得できません。");
+        
         const docRef = await this.db.collection('invitations').add({
             ...invitationData,
             tenantId: tenantId,
@@ -140,19 +133,37 @@ class ApiClient {
         }
         return { id: doc.id, ...doc.data() };
     }
-    
+
     async updateEvaluationStatus(evaluationId, status) {
         const tenantId = this._getTenantId();
         const docRef = this.db.collection('evaluations').doc(evaluationId);
         const doc = await docRef.get();
+
         if (!doc.exists || doc.data().tenantId !== tenantId) {
             throw new Error("対象の評価が見つからないか、権限がありません。");
         }
+
         await docRef.update({
             status: status,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
+
+    // --- ▼▼▼ ここから追加 ▼▼▼ ---
+    async getPastEvaluationsForUser(subordinateId) {
+        const tenantId = this._getTenantId();
+        if (!tenantId || !subordinateId) return [];
+    
+        const snapshot = await this.db.collection('evaluations')
+            .where('tenantId', '==', tenantId)
+            .where('subordinateId', '==', subordinateId)
+            .where('status', '==', 'completed') // ステータスが完了のものに限定
+            .orderBy('updatedAt', 'desc')
+            .get();
+    
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+    // --- ▲▲▲ 追加ここまで ▲▲▲ ---
 
     async getTargetJobTypes() {
         const tenantId = this._getTenantId();
