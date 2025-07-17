@@ -1,13 +1,14 @@
-// evaluations.js の全コード（比較表示切り替え版）
+// evaluations.js の全コード（変数名タイポ修正版）
 /**
  * evaluations.js - 評価関連ページ
  */
 async function showEvaluations() {
-    // (この関数は変更なし)
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧' }]);
+    
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;
+
     try {
         const evaluations = await api.getEvaluations();
         mainContent.innerHTML = `
@@ -40,7 +41,6 @@ async function showEvaluations() {
 }
 
 async function showNewEvaluationForm() {
-    // (この関数は変更なし)
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧', path: '#/evaluations' }, { label: '新規評価作成' }]);
     const mainContent = document.getElementById('main-content');
@@ -50,7 +50,6 @@ async function showNewEvaluationForm() {
     }
 }
 
-// ▼▼▼ この関数を全面的に書き換えます ▼▼▼
 async function viewEvaluation(id) {
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧', path: '#/evaluations' }, { label: '評価詳細' }]);
@@ -60,12 +59,17 @@ async function viewEvaluation(id) {
 
     try {
         const evaluation = await api.getEvaluationById(id);
+        if (!evaluation) throw new Error("評価データが見つかりません。");
+
         const structure = await api.getEvaluationStructure(evaluation.jobTypeId);
+        if (!structure) throw new Error("評価構造データが見つかりません。");
+        
         const pastEvaluations = await api.getPastEvaluationsForUser(evaluation.subordinateId);
         
         const { quantitativeItems, qualitativeItems } = prepareItemsForDisplay(structure, evaluation);
 
-        mainContent.innerHTML = getEvaluationDetailHTML(evaluation, otherPastEvaluations.filter(e => e.id !== id));
+        // ▼▼▼ otherPastEvaluations を pastEvaluations に修正 ▼▼▼
+        mainContent.innerHTML = getEvaluationDetailHTML(evaluation, pastEvaluations.filter(e => e.id !== id));
         
         renderEvaluationDetails(quantitativeItems, qualitativeItems);
         attachEventListeners(id, evaluation, { quantitativeItems, qualitativeItems }, pastEvaluations);
@@ -103,7 +107,7 @@ function getEvaluationDetailHTML(evaluation, otherPastEvaluations) {
     }
 
     let comparisonHTML = '';
-    if (otherPastEvaluations.length > 0) {
+    if (otherPastEvaluations && otherPastEvaluations.length > 0) {
         comparisonHTML = `
             <div class="form-section">
                 <h3>過去の評価と比較（定量的評価）</h3>
@@ -121,6 +125,7 @@ function getEvaluationDetailHTML(evaluation, otherPastEvaluations) {
             </div>`;
     }
 
+    const allItems = [...quantitativeItems, ...qualitativeItems];
     return `
         <div class="page">
             <div class="page-header"><h1 class="page-title">👁️ 評価レポート</h1><div>${actionButtonsHTML}<button id="btn-back-to-list-detail" class="btn">戻る</button></div></div>
@@ -133,8 +138,8 @@ function getEvaluationDetailHTML(evaluation, otherPastEvaluations) {
                 <div class="evaluation-graphs"><div class="evaluation-chart"><h4>定量的評価チャート</h4><div class="chart-container" id="detail-quantitative-chart"></div></div></div>
                 ${comparisonHTML}
                 <div class="evaluation-details-section"><h3>詳細評価</h3><div class="table-container"><table class="table"><thead><tr><th>カテゴリ</th><th>評価項目</th><th>スコア</th><th>コメント</th></tr></thead><tbody>
-                    ${[...quantitativeItems, ...qualitativeItems].map(item => `
-                        <tr><td>${item.categoryName}</td><td>${item.itemName}</td><td>${item.score.toFixed(1)}</td><td>${item.comment || ''}</td></tr>`).join('')}
+                    ${allItems.length > 0 ? allItems.map(item => `
+                        <tr><td>${item.categoryName}</td><td>${item.itemName}</td><td>${item.score.toFixed(1)}</td><td>${item.comment || ''}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align: center;">評価項目への入力がありません。</td></tr>`}
                 </tbody></table></div></div>
                 <div class="form-section"><h3>総合コメント</h3><p class="comment-box">${evaluation.overallComment || 'コメントはありません。'}</p></div>
             </div>
@@ -150,20 +155,19 @@ function renderEvaluationDetails(quantitativeItems, qualitativeItems) {
 function attachEventListeners(id, currentEvaluation, currentItems, pastEvaluations) {
     document.getElementById('btn-back-to-list-detail').addEventListener('click', () => router.navigate('/evaluations'));
     
-    // 承認ボタン
-    document.getElementById('btn-approve-primary')?.addEventListener('click', async () => { /* ... */ });
-    document.getElementById('btn-approve-final')?.addEventListener('click', async () => { /* ... */ });
+    document.getElementById('btn-approve-primary')?.addEventListener('click', async () => { if(confirm('この評価を一次承認しますか？')) await api.updateEvaluationStatus(id, 'approved_by_evaluator').then(()=>router.navigate('/evaluations')).catch(e=>showNotification('承認失敗','error'))});
+    document.getElementById('btn-approve-final')?.addEventListener('click', async () => { if(confirm('この評価を最終承認しますか？')) await api.updateEvaluationStatus(id, 'completed').then(()=>router.navigate('/evaluations')).catch(e=>showNotification('承認失敗','error'))});
 
-    // 比較プルダウンと表示切り替えボタン
     const comparisonContainer = document.getElementById('comparison-charts-container');
     const pastEvalSelect = document.getElementById('past-evaluation-select');
     let selectedPastEval = null;
 
-    const renderComparison = () => {
+    const renderComparison = async () => {
         if (!selectedPastEval || !comparisonContainer) return;
         
         const viewMode = document.querySelector('.view-switcher .btn.active')?.dataset.viewMode || 'side';
-        const pastQuantItems = prepareItemsForDisplay(selectedPastEval.structure, selectedPastEval).quantitativeItems;
+        const pastStructure = await api.getEvaluationStructure(selectedPastEval.jobTypeId);
+        const { quantitativeItems: pastQuantItems } = prepareItemsForDisplay(pastStructure, selectedPastEval);
 
         if (viewMode === 'overlay') {
             comparisonContainer.innerHTML = `<div class="evaluation-chart"><div id="compare-overlay-chart"></div></div>`;
@@ -186,9 +190,7 @@ function attachEventListeners(id, currentEvaluation, currentItems, pastEvaluatio
             return;
         }
         comparisonContainer.innerHTML = `<p>過去の評価を読み込み中...</p>`;
-        const pastEvalData = await api.getEvaluationById(pastEvalId);
-        const pastStructure = await api.getEvaluationStructure(pastEvalData.jobTypeId);
-        selectedPastEval = { ...pastEvalData, structure: pastStructure };
+        selectedPastEval = await api.getEvaluationById(pastEvalId);
         renderComparison();
     });
 
