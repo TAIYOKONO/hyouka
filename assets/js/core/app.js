@@ -1,4 +1,4 @@
-// app.js の全コード（ルーター強制起動の修正版）
+// app.js の全コード（個人目標設定ルート追加版）
 /**
  * app.js - 建設業評価システム メインアプリケーション (最終確定版)
  */
@@ -22,6 +22,7 @@ class ConstructionEvaluationApp {
         this.router.addRoute('/evaluations/new', showNewEvaluationForm);
         this.router.addRoute('/users', showUsers);
         this.router.addRoute('/settings', showSettingsPage);
+        this.router.addRoute('/goal-setting', showGoalSettingPage); // ▼▼▼ この行を追加 ▼▼▼
         this.router.addRoute('/register', showRegistrationPage);
         this.router.addRoute('/evaluations/:id', viewEvaluation);
         this.router.addRoute('/register-admin', showAdminRegistrationForm);
@@ -36,16 +37,12 @@ class ConstructionEvaluationApp {
         
         // 認証状態の監視を開始
         this.auth.init((user) => {
-            // 認証状態が変わった時にもルーティングを再実行
             if (this.router) {
                 this.router.handleRouteChange();
             }
         });
         
-        // ▼▼▼ この行を追加 ▼▼▼
-        // 認証状態の監視とは別に、初期化時に一度だけルーティングを実行する
         this.router.handleRouteChange();
-        // ▲▲▲ 追加ここまで ▲▲▲
         
         console.log('✅ Initialized successfully');
     }
