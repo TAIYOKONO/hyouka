@@ -1,29 +1,27 @@
-// components/evaluation-form.js の全コード（新UI・新フロー対応版）
+// components/evaluation-form.js の全コード（自己評価保存ロジック実装版）
 /**
  * 評価入力フォームコンポーネント
  */
 class EvaluationForm {
     constructor() {
-        this.currentEvaluation = null;
-        this.mode = 'self'; // 'self' or 'evaluator'
+        this.mode = 'self';
         this.allUsers = [];
         this.allJobTypes = [];
         this.currentStructure = null;
-        this.container = null;
-        this.eventsBound = false;
+        this.container = document.getElementById('evaluation-form-container');
+        this.bindEventsOnce();
     }
 
     async open(mode = 'self', evaluationId = null) {
         this.mode = mode;
-        this.container = document.getElementById('evaluation-form-container');
         if (!this.container) return;
-
-        this.bindEventsOnce();
         
         if (this.mode === 'evaluator') {
             await this.loadForEvaluator(evaluationId);
         } else {
-            await this.loadForSelf();
+            this.container.innerHTML = this.getFormHTML();
+            await this.loadInitialData();
+            this.setFieldsDisabled(false, true); // 自己評価は有効、評価者評価は無効
         }
     }
 
@@ -40,24 +38,12 @@ class EvaluationForm {
                 this.handleJobTypeChange(e.target.value);
             }
         });
-        this.container.addEventListener('click', e => {
-            if (e.target.matches('.tab-item')) {
-                this.activateTab(e.target.dataset.tab);
-            } else if (e.target.id === 'cancel-btn') {
-                router.navigate('/evaluations');
-            }
-        });
         this.eventsBound = true;
     }
 
-    async loadForSelf() {
-        this.container.innerHTML = this.getFormHTML();
-        await this.loadInitialData();
-        this.setFieldsDisabled(false, true);
-    }
-    
     async loadForEvaluator(evaluationId) {
         this.container.innerHTML = `<div class="page-content"><p>評価者モードの読み込み中...</p></div>`;
+        // このロジックは次のステップで実装します
     }
 
     async loadInitialData() {
@@ -70,7 +56,6 @@ class EvaluationForm {
             this.populateSelect('job-type-select', this.allJobTypes, 'id', 'name');
         } catch (error) {
             console.error('フォームデータの読み込みに失敗:', error);
-            showNotification('フォームデータの読み込みに失敗しました', 'error');
         }
     }
 
@@ -86,13 +71,6 @@ class EvaluationForm {
         });
     }
 
-    activateTab(tabId) {
-        this.container.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
-        this.container.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-        this.container.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
-        this.container.querySelector(`#${tabId}`).classList.add('active');
-    }
-
     async handleJobTypeChange(jobTypeId) {
         this.clearEvaluationSections();
         if (!jobTypeId) return;
@@ -102,24 +80,20 @@ class EvaluationForm {
             this.setFieldsDisabled(this.mode !== 'self', this.mode !== 'evaluator');
         } catch (error) {
             console.error('評価構造の読み込みに失敗:', error);
-            showNotification('評価構造の読み込みに失敗しました', 'error');
         }
     }
 
     clearEvaluationSections() {
-        const quantitativeContainer = document.getElementById('quantitative-items');
-        const qualitativeContainer = document.getElementById('qualitative-items');
-        if (quantitativeContainer) quantitativeContainer.innerHTML = '';
-        if (qualitativeContainer) qualitativeContainer.innerHTML = '';
+        const container = document.getElementById('evaluation-items-container');
+        if (container) container.innerHTML = '';
     }
 
     buildEvaluationSections() {
-        const quantitativeContainer = document.getElementById('quantitative-items');
-        const qualitativeContainer = document.getElementById('qualitative-items');
-        if (!quantitativeContainer || !qualitativeContainer) return;
+        const container = document.getElementById('evaluation-items-container');
+        if (!container) return;
         
         if (!this.currentStructure || !this.currentStructure.categories || this.currentStructure.categories.length === 0) {
-            quantitativeContainer.innerHTML = '<p>この職種には評価項目が設定されていません。</p>';
+            container.innerHTML = '<p>この職種には評価項目が設定されていません。</p>';
             return;
         }
 
@@ -137,29 +111,13 @@ class EvaluationForm {
                         <div class="evaluation-item-row-grid">
                             <div class="self-evaluation-col">
                                 <h5>${item.itemName}</h5>
-                                <div class="form-group">
-                                    <label>自己評価</label>
-                                    <select class="rating-select self" name="self_rating_${item.itemName}">
-                                        <option value="">選択</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>自己コメント</label>
-                                    <textarea placeholder="自己評価コメント" rows="3" class="comment-input self" name="self_comment_${item.itemName}"></textarea>
-                                </div>
+                                <div class="form-group"><select class="rating-select self" name="self_rating_${item.itemName}"><option value="">選択</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                                <div class="form-group"><textarea placeholder="自己評価コメント" rows="3" class="comment-input self" name="self_comment_${item.itemName}"></textarea></div>
                             </div>
                             <div class="evaluator-evaluation-col">
                                 <h5>${item.itemName}</h5>
-                                <div class="form-group">
-                                    <label>評価者評価</label>
-                                    <select class="rating-select evaluator" name="evaluator_rating_${item.itemName}">
-                                        <option value="">選択</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>評価者コメント</label>
-                                    <textarea placeholder="評価者コメント" rows="3" class="comment-input evaluator" name="evaluator_comment_${item.itemName}"></textarea>
-                                </div>
+                                <div class="form-group"><select class="rating-select evaluator" name="evaluator_rating_${item.itemName}"><option value="">選択</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
+                                <div class="form-group"><textarea placeholder="評価者コメント" rows="3" class="comment-input evaluator" name="evaluator_comment_${item.itemName}"></textarea></div>
                             </div>
                         </div>
                     `).join('')}
@@ -167,11 +125,8 @@ class EvaluationForm {
             `).join('');
         };
         
-        const quantitativeItems = (this.currentStructure.categories || []).flatMap(c => (c.items || []).filter(i => i.itemType === 'quantitative').map(i => ({...i, categoryName: c.categoryName})));
-        const qualitativeItems = (this.currentStructure.categories || []).flatMap(c => (c.items || []).filter(i => i.itemType === 'qualitative').map(i => ({...i, categoryName: c.categoryName})));
-
-        quantitativeContainer.innerHTML = quantitativeItems.length > 0 ? buildSectionHTML(quantitativeItems) : '<p>定量的評価の項目はありません。</p>';
-        qualitativeContainer.innerHTML = qualitativeItems.length > 0 ? buildSectionHTML(qualitativeItems) : '<p>定性的評価の項目はありません。</p>';
+        const allItems = (this.currentStructure.categories || []).flatMap(c => (c.items || []).map(i => ({...i, categoryName: c.categoryName})));
+        container.innerHTML = allItems.length > 0 ? buildSectionHTML(allItems) : '<p>評価項目がありません。</p>';
     }
 
     setFieldsDisabled(isSelfDisabled, isEvaluatorDisabled) {
@@ -179,15 +134,60 @@ class EvaluationForm {
         document.querySelectorAll('.evaluator').forEach(el => el.disabled = isEvaluatorDisabled);
     }
     
+    collectFormData() {
+        const form = document.getElementById('evaluation-form');
+        const formData = new FormData(form);
+        const subordinateId = formData.get('subordinateId');
+        const selectedUser = this.allUsers.find(u => u.id === subordinateId);
+
+        const selfRatings = {};
+        if (this.currentStructure && this.currentStructure.categories) {
+            this.currentStructure.categories.forEach(category => {
+                (category.items || []).forEach(item => {
+                    const score = form.querySelector(`select[name="self_rating_${item.itemName}"]`)?.value;
+                    const comment = form.querySelector(`textarea[name="self_comment_${item.itemName}"]`)?.value;
+                    if (score) {
+                        selfRatings[`${category.categoryName}_${item.itemName}`] = {
+                            score: parseFloat(score),
+                            comment: comment || ''
+                        };
+                    }
+                });
+            });
+        }
+        
+        return {
+            subordinateId: subordinateId,
+            subordinateName: selectedUser?.name || '',
+            jobTypeId: formData.get('jobTypeId'),
+            period: formData.get('evaluationPeriod'),
+            selfRatings: selfRatings,
+            evaluatorRatings: {}, // 評価者評価はまだ空
+            selfOverallComment: formData.get('overallComment'),
+            evaluatorOverallComment: '',
+        };
+    }
+
     async handleSubmit() {
-        console.log("Submit button clicked");
+        const evaluationData = this.collectFormData();
+        if (!evaluationData.subordinateId || !evaluationData.jobTypeId || !evaluationData.period) {
+            return showNotification('基本情報の必須項目を選択してください。', 'error');
+        }
+        try {
+            await window.api.createEvaluation(evaluationData);
+            showNotification('評価を提出しました！', 'success');
+            router.navigate('/evaluations');
+        } catch (error) {
+            console.error('評価の提出に失敗:', error);
+            showNotification('評価の提出に失敗しました。', 'error');
+        }
     }
 
     getFormHTML() {
         return `
             <div class="page">
                 <div class="page-header">
-                    <h1 id="form-title">評価入力</h1>
+                    <h1 id="form-title">新規評価作成</h1>
                     <button type="submit" class="btn btn-primary" id="submit-btn" form="evaluation-form">評価を提出</button>
                 </div>
                 <div class="page-content">
@@ -199,20 +199,7 @@ class EvaluationForm {
                                 <span><strong>役職:</strong> <select id="job-type-select" name="jobTypeId" required></select></span>
                             </div>
                         </div>
-                        <div class="tab-ui">
-                            <div class="tab-navigation">
-                                <div class="tab-item active" data-tab="quantitative-panel">定量的評価</div>
-                                <div class="tab-item" data-tab="qualitative-panel">定性的評価</div>
-                            </div>
-                            <div class="tab-content">
-                                <div id="quantitative-panel" class="tab-panel active"><div id="quantitative-items"></div></div>
-                                <div id="qualitative-panel" class="tab-panel"><div id="qualitative-items"></div></div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-    }
-}
-window.evaluationForm = new EvaluationForm();
+                        <div id="evaluation-items-container"></div>
+                        <div class="form-section">
+                            <h3>総合コメント</h3>
+                            <div class="form-group"><textarea id="overall-comment" name="overallComment" rows="4" class="self" placeholder
