@@ -1,4 +1,4 @@
-// api.js の全コード（新評価データ構造対応版）
+// api.js の全コード（個人目標設定メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -94,20 +94,17 @@ class ApiClient {
             .orderBy('updatedAt', 'desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
-
-    // ▼▼▼ この関数を修正します ▼▼▼
+    
     async createEvaluation(evaluationData) {
         const tenantId = this._getTenantId();
         const currentUser = window.authManager.getCurrentUser();
         if (!tenantId || !currentUser) throw new Error("テナント情報またはユーザー情報が取得できません。");
-
         const dataToSave = { 
             ...evaluationData,
             tenantId: tenantId,
-            // 評価フローの最初の提出者（自己評価を行った人）を記録
             submittedById: currentUser.uid, 
             submittedByName: currentUser.name,
-            status: 'self_assessed', // 新しいステータス: 自己評価完了
+            status: 'self_assessed',
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -207,5 +204,45 @@ class ApiClient {
             return docRef.id;
         }
     }
+
+    // ▼▼▼ ここから追加 ▼▼▼
+    async getQualitativeGoals(userId, period) {
+        const tenantId = this._getTenantId();
+        if (!tenantId || !userId || !period) return null;
+    
+        const snapshot = await this.db.collection('qualitativeGoals')
+            .where('tenantId', '==', tenantId)
+            .where('userId', '==', userId)
+            .where('period', '==', period)
+            .limit(1)
+            .get();
+    
+        if (snapshot.empty) return null;
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+    }
+    
+    async saveQualitativeGoals(goalData) {
+        const tenantId = this._getTenantId();
+        const currentUser = window.authManager.getCurrentUser();
+        if (!tenantId || !currentUser) throw new Error("ユーザー情報が取得できません。");
+    
+        const dataToSave = {
+            ...goalData,
+            tenantId: tenantId,
+            userId: currentUser.uid,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        if (goalData.id) {
+            await this.db.collection('qualitativeGoals').doc(goalData.id).set(dataToSave, { merge: true });
+            return goalData.id;
+        } else {
+            dataToSave.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            const docRef = await this.db.collection('qualitativeGoals').add(dataToSave);
+            return docRef.id;
+        }
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
 }
 window.api = new ApiClient();
