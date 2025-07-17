@@ -1,9 +1,10 @@
+/* components.css の全コード（テーブル回り込み防止版） */
 /**
  * components.css - コンポーネント専用スタイル
  */
 .btn {
     display: inline-flex;
-    align-items: center;Align-Items：Center;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.6rem 1.2rem;
     border: none;
@@ -11,7 +12,7 @@
     font-size: 1rem;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
-    text-decoration: none;テキスト装置：なし;
+    text-decoration: none;
     transition: opacity 0.2s;
 }
 
@@ -62,10 +63,9 @@
 .table-container {
     background: var(--color-white);
     border-radius: var(--card-border-radius);
-    overflow-x: auto; /* ← ここを修正 */
+    overflow-x: auto; /* 横スクロールを有効に */
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
-}
 }
 
 .table {
@@ -78,6 +78,7 @@
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    white-space: nowrap; /* ▼▼▼ この行を追加 ▼▼▼ */
 }
 
 .table th {
@@ -199,7 +200,7 @@
     margin-left: 4px;
 }
 
-/* --- ▼▼▼ 設定ページレイアウト（ここから追記） ▼▼▼ --- */
+/* --- 設定ページレイアウト --- */
 .settings-layout {
     display: flex;
     gap: var(--spacing-xl);
@@ -266,32 +267,7 @@
     border-radius: var(--card-border-radius);
     color: var(--color-text-secondary);
     border: 2px dashed var(--border-color);
-}}}}
-/* --- タブコンポーネント --- */
-.tab-navigation {
-    display: flex;
-    border-bottom: 2px solid var(--border-color);
-    margin-bottom: var(--spacing-lg);
 }
-.tab-item {
-    padding: 0.8rem 1.5rem;
-    cursor: pointer;
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-medium);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-}
-.tab-item.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-}
-.tab-panel {
-    display: none;
-}
-.tab-panel.active {
-    display: block;表示：ブロック;
-}
-/* components.css の末尾に追記 */
 
 /* --- 表示切り替えボタン --- */
 .view-switcher {
