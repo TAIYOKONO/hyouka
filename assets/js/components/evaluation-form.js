@@ -1,4 +1,4 @@
-// components/evaluation-form.js の全コード（イベント重複防止版）
+// components/evaluation-form.js の全コード（左右分割UI版）
 /**
  * 評価入力フォームコンポーネント
  */
@@ -10,46 +10,39 @@ class EvaluationForm {
         this.allUsers = [];
         this.allJobTypes = [];
         this.currentStructure = null;
-        this.container = null; // コンテナをプロパティとして保持
+        this.container = null;
+        this.eventsBound = false;
     }
 
     async openNewEvaluation() {
         this.container = document.getElementById('evaluation-form-container');
         if (!this.container) return;
         
-        // イベントリスナーを一度だけ設定
         this.bindEventsOnce();
-
         this.container.innerHTML = this.getFormHTML();
         await this.loadInitialData();
     }
 
-    // ▼▼▼ イベントリスナーの登録を初回のみに限定 ▼▼▼
     bindEventsOnce() {
-        if (this.eventsBound) return; // 既に登録済みなら何もしない
-
+        if (this.eventsBound || !this.container) return;
         this.container.addEventListener('submit', e => {
             if (e.target.id === 'evaluation-form') {
                 e.preventDefault();
                 this.handleSubmit();
             }
         });
-
         this.container.addEventListener('change', e => {
             if (e.target.id === 'job-type-select') {
                 this.handleJobTypeChange(e.target.value);
             }
         });
-
         this.container.addEventListener('click', e => {
             if (e.target.matches('.tab-item')) {
-                const tabId = e.target.dataset.tab;
-                this.activateTab(tabId);
+                this.activateTab(e.target.dataset.tab);
             } else if (e.target.id === 'cancel-btn') {
                 router.navigate('/evaluations');
             }
         });
-
         this.eventsBound = true;
     }
 
@@ -82,7 +75,6 @@ class EvaluationForm {
     activateTab(tabId) {
         this.container.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
         this.container.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-        
         this.container.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
         this.container.querySelector(`#${tabId}`).classList.add('active');
     }
@@ -115,78 +107,59 @@ class EvaluationForm {
             quantitativeContainer.innerHTML = '<p>この職種には評価項目が設定されていません。</p>';
             return;
         }
-        const quantitativeHtml = [];
-        const qualitativeHtml = [];
-        this.currentStructure.categories.forEach((category, catIndex) => {
-            (category.items || []).forEach((item, itemIndex) => {
-                const itemHtml = `
-                    <div class="form-group evaluation-item-row">
-                        <label>${category.categoryName} - ${item.itemName}</label>
-                        <div class="rating-controls">
-                            <input type="number" min="1" max="5" step="0.5" class="rating-input" data-cat-index="${catIndex}" data-item-index="${itemIndex}">
-                            <textarea placeholder="コメント..." rows="2" class="comment-input" data-cat-index="${catIndex}" data-item-index="${itemIndex}"></textarea>
+
+        const buildSectionHTML = (items) => {
+            if (!items || items.length === 0) return '';
+            const groupedByCategory = items.reduce((acc, item) => {
+                (acc[item.categoryName] = acc[item.categoryName] || []).push(item);
+                return acc;
+            }, {});
+
+            return Object.entries(groupedByCategory).map(([categoryName, categoryItems]) => `
+                <div class="form-section">
+                    <h4>${categoryName}</h4>
+                    ${categoryItems.map(item => `
+                        <div class="evaluation-item-row-grid">
+                            <div class="self-evaluation-col">
+                                <h5>${item.itemName}（自己評価）</h5>
+                                <div class="form-group">
+                                    <select class="rating-select self" name="self_rating_${item.itemName}">
+                                        <option value="">選択してください</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <textarea placeholder="自己評価コメント" rows="3" class="comment-input self" name="self_comment_${item.itemName}"></textarea>
+                                </div>
+                            </div>
+                            <div class="evaluator-evaluation-col">
+                                <h5>${item.itemName}（評価者評価）</h5>
+                                <div class="form-group">
+                                    <select class="rating-select evaluator" name="evaluator_rating_${item.itemName}">
+                                        <option value="">選択してください</option>
+                                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <textarea placeholder="評価者コメント" rows="3" class="comment-input evaluator" name="evaluator_comment_${item.itemName}"></textarea>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                `;
-                if (item.itemType === 'quantitative') {
-                    quantitativeHtml.push(itemHtml);
-                } else {
-                    qualitativeHtml.push(itemHtml);
-                }
-            });
-        });
-        quantitativeContainer.innerHTML = quantitativeHtml.length ? quantitativeHtml.join('') : '<p>定量的評価の項目はありません。</p>';
-        qualitativeContainer.innerHTML = qualitativeHtml.length ? qualitativeHtml.join('') : '<p>定性的評価の項目はありません。</p>';
+                    `).join('')}
+                </div>
+            `).join('');
+        };
+        
+        const quantitativeItems = (this.currentStructure.categories || []).flatMap(c => (c.items || []).filter(i => i.itemType === 'quantitative').map(i => ({...i, categoryName: c.categoryName})));
+        const qualitativeItems = (this.currentStructure.categories || []).flatMap(c => (c.items || []).filter(i => i.itemType === 'qualitative').map(i => ({...i, categoryName: c.categoryName})));
+
+        quantitativeContainer.innerHTML = quantitativeItems.length > 0 ? buildSectionHTML(quantitativeItems) : '<p>定量的評価の項目はありません。</p>';
+        qualitativeContainer.innerHTML = qualitativeItems.length > 0 ? buildSectionHTML(qualitativeItems) : '<p>定性的評価の項目はありません。</p>';
     }
     
-    collectFormData() {
-        const form = document.getElementById('evaluation-form');
-        const formData = new FormData(form);
-        const subordinateId = formData.get('subordinateId');
-        const selectedUser = this.allUsers.find(u => u.id === subordinateId);
-        const ratings = {};
-        if (this.currentStructure && this.currentStructure.categories) {
-            this.currentStructure.categories.forEach((category, catIndex) => {
-                (category.items || []).forEach((item, itemIndex) => {
-                    const scoreInput = form.querySelector(`.rating-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
-                    const commentInput = form.querySelector(`.comment-input[data-cat-index="${catIndex}"][data-item-index="${itemIndex}"]`);
-                    if (scoreInput && scoreInput.value) {
-                        const key = `${category.categoryName}_${item.itemName}`;
-                        ratings[key] = {
-                            score: parseFloat(scoreInput.value),
-                            comment: commentInput ? commentInput.value : ''
-                        };
-                    }
-                });
-            });
-        }
-        const scores = Object.values(ratings).map(r => r.score).filter(s => !isNaN(s));
-        const overallRating = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : 0;
-        return {
-            subordinateId: subordinateId,
-            subordinateName: selectedUser?.name || '',
-            jobTypeId: formData.get('jobTypeId'),
-            period: formData.get('evaluationPeriod'),
-            ratings: ratings,
-            overallRating: parseFloat(overallRating),
-            overallComment: formData.get('overallComment'),
-        };
-    }
-
-    async handleSubmit() {
-        const evaluationData = this.collectFormData();
-        if (!evaluationData.subordinateId || !evaluationData.jobTypeId || !evaluationData.period) {
-            return showNotification('基本情報の必須項目を選択してください。', 'error');
-        }
-        try {
-            await window.api.createEvaluation(evaluationData);
-            showNotification('評価を提出しました！', 'success');
-            router.navigate('/evaluations');
-        } catch (error) {
-            console.error('評価の提出に失敗:', error);
-            showNotification('評価の提出に失敗しました。', 'error');
-        }
-    }
+    // (handleSubmit, collectFormDataは次のステップで改修)
+    async handleSubmit() { /* ... */ }
+    collectFormData() { /* ... */ }
 
     getFormHTML() {
         return `
@@ -203,22 +176,11 @@ class EvaluationForm {
                         <div class="form-section">
                             <h3>基本情報</h3>
                             <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                                <div class="form-group">
-                                    <label for="subordinate-select">評価対象者 <span class="required">*</span></label>
-                                    <select id="subordinate-select" name="subordinateId" required></select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="job-type-select">対象職種 <span class="required">*</span></label>
-                                    <select id="job-type-select" name="jobTypeId" required></select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="period-select">評価期間 <span class="required">*</span></label>
-                                    <select id="period-select" name="evaluationPeriod" required>
-                                        <option value="">選択してください</option>
-                                        <option value="2025年上期">2025年上期</option>
-                                        <option value="2025年下期">2025年下期</option>
-                                    </select>
-                                </div>
+                                <div class="form-group"><label>評価対象者</label><select id="subordinate-select" name="subordinateId" required></select></div>
+                                <div class="form-group"><label>対象職種</label><select id="job-type-select" name="jobTypeId" required></select></div>
+                                <div class="form-group"><label>評価期間</label><select id="period-select" name="evaluationPeriod" required>
+                                    <option value="">選択してください</option><option value="2025年上期">2025年上期</option><option value="2025年下期">2025年下期</option>
+                                </select></div>
                             </div>
                         </div>
                         <div class="tab-ui">
@@ -243,5 +205,4 @@ class EvaluationForm {
         `;
     }
 }
-
 window.evaluationForm = new EvaluationForm();
