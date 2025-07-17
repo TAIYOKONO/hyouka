@@ -1,4 +1,4 @@
-// navigation.js の全コード（モバイルナビゲーション対応版）
+// navigation.js の全コード（ヘッダー構造修正版）
 /**
  * navigation.js - グローバルナビゲーション管理 (最終版)
  */
@@ -21,13 +21,15 @@ class NavigationManager {
         
         header.innerHTML = `
             <div class="header-content">
-                <div class="logo"><a href="#/dashboard"><h1>評価システム</h1></a></div>
-                <nav class="main-navigation">
-                    <ul class="nav-menu">${this.renderMenuItems()}</ul>
-                </nav>
-                <div class="user-menu">
-                    ${this.renderUserInfo()}
-                    <button id="logout-button" class="btn btn-secondary btn-sm">ログアウト</button>
+                <div class="pc-nav-elements">
+                    <div class="logo"><a href="#/dashboard"><h1>評価システム</h1></a></div>
+                    <nav class="main-navigation">
+                        <ul class="nav-menu">${this.renderMenuItems()}</ul>
+                    </nav>
+                    <div class="user-menu">
+                        ${this.renderUserInfo()}
+                        <button id="logout-button" class="btn btn-secondary btn-sm">ログアウト</button>
+                    </div>
                 </div>
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
             </div>
@@ -48,7 +50,7 @@ class NavigationManager {
         ];
     }
     
-    renderMenuItems(isMobile = false) {
+    renderMenuItems() {
         if (!this.currentUser) return '';
         return this.menuItems
             .filter(item => item.roles.includes(this.currentUser.role))
@@ -78,15 +80,13 @@ class NavigationManager {
 
         const toggleButton = document.getElementById('mobile-menu-toggle');
         const mobileMenu = document.getElementById('mobile-nav-menu');
-        if(toggleButton && mobileMenu) {
+        const header = document.getElementById('app-header');
+        if(toggleButton && mobileMenu && header) {
             toggleButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // メニューの表示/非表示を切り替える
                 mobileMenu.style.display = mobileMenu.style.display === 'block' ? 'none' : 'block';
             });
         }
-
-        // メニューの外側をクリックしたときにメニューを閉じる
         document.addEventListener('click', (e) => {
             if (mobileMenu && mobileMenu.style.display === 'block' && !header.contains(e.target)) {
                 mobileMenu.style.display = 'none';
@@ -94,5 +94,4 @@ class NavigationManager {
         });
     }
 }
-
 window.navigation = new NavigationManager();
