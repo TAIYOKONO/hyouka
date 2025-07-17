@@ -1,4 +1,4 @@
-// components/evaluation-form.js の全コード（新UI・不具合修正版）
+// components/evaluation-form.js の全コード（新UI・新フロー対応版）
 /**
  * 評価入力フォームコンポーネント
  */
@@ -18,34 +18,28 @@ class EvaluationForm {
         this.container = document.getElementById('evaluation-form-container');
         if (!this.container) return;
 
-        this.container.innerHTML = this.getFormHTML();
-        await this.loadInitialData();
         this.bindEventsOnce();
-
+        
         if (this.mode === 'evaluator') {
             await this.loadForEvaluator(evaluationId);
         } else {
-            this.setFieldsDisabled(false, true); // 自己評価は有効、評価者評価は無効
+            await this.loadForSelf();
         }
     }
 
     bindEventsOnce() {
         if (this.eventsBound || !this.container) return;
-
-        // イベントリスナーが重複しないように、親コンテナに対して一度だけ設定
         this.container.addEventListener('submit', e => {
             if (e.target.id === 'evaluation-form') {
                 e.preventDefault();
                 this.handleSubmit();
             }
         });
-
         this.container.addEventListener('change', e => {
             if (e.target.id === 'job-type-select') {
                 this.handleJobTypeChange(e.target.value);
             }
         });
-
         this.container.addEventListener('click', e => {
             if (e.target.matches('.tab-item')) {
                 this.activateTab(e.target.dataset.tab);
@@ -53,17 +47,17 @@ class EvaluationForm {
                 router.navigate('/evaluations');
             }
         });
-
         this.eventsBound = true;
     }
 
     async loadForSelf() {
-        // openメソッドから呼び出されるため、この個別メソッドは不要に
+        this.container.innerHTML = this.getFormHTML();
+        await this.loadInitialData();
+        this.setFieldsDisabled(false, true);
     }
     
     async loadForEvaluator(evaluationId) {
         this.container.innerHTML = `<div class="page-content"><p>評価者モードの読み込み中...</p></div>`;
-        // このロジックは次のステップで実装します
     }
 
     async loadInitialData() {
@@ -186,7 +180,6 @@ class EvaluationForm {
     }
     
     async handleSubmit() {
-        // (このロジックは次のステップで実装します)
         console.log("Submit button clicked");
     }
 
@@ -202,9 +195,7 @@ class EvaluationForm {
                         <div class="form-section evaluation-form-header">
                             <div class="evaluation-form-header-info">
                                 <span><strong>評価対象者:</strong> <select id="subordinate-select" name="subordinateId" required></select></span>
-                                <span><strong>評価期間:</strong> <select id="period-select" name="evaluationPeriod" required>
-                                    <option value="">選択</option><option value="2025年上期">2025年上期</option><option value="2025年下期">2025年下期</option>
-                                </select></span>
+                                <span><strong>評価期間:</strong> <select id="period-select" name="evaluationPeriod" required><option value="">選択</option><option value="2025年上期">2025年上期</option><option value="2025年下期">2025年下期</option></select></span>
                                 <span><strong>役職:</strong> <select id="job-type-select" name="jobTypeId" required></select></span>
                             </div>
                         </div>
