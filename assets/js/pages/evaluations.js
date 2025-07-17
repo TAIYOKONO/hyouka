@@ -1,4 +1,4 @@
-// evaluations.js の全コード（構文エラー最終修正版）
+// evaluations.js の全コード（詳細テーブル修正版）
 /**
  * evaluations.js - 評価関連ページ
  */
@@ -59,11 +59,7 @@ async function viewEvaluation(id) {
 
     try {
         const evaluation = await api.getEvaluationById(id);
-        if (!evaluation) throw new Error("評価データが見つかりません。");
-
         const structure = await api.getEvaluationStructure(evaluation.jobTypeId);
-        if (!structure) throw new Error("評価構造データが見つかりません。");
-        
         const pastEvaluations = await api.getPastEvaluationsForUser(evaluation.subordinateId);
         
         const { quantitativeItems, qualitativeItems } = prepareItemsForDisplay(structure, evaluation);
@@ -79,6 +75,7 @@ async function viewEvaluation(id) {
     }
 }
 
+// --- viewEvaluationのヘルパー関数群 ---
 function prepareItemsForDisplay(structure, evaluation) {
     if (!structure || !evaluation) return { quantitativeItems: [], qualitativeItems: [] };
     const quantitativeItems = [];
@@ -135,10 +132,18 @@ function getEvaluationDetailHTML(evaluation, otherPastEvaluations, quantitativeI
                 </div>
                 <div class="evaluation-graphs"><div class="evaluation-chart"><h4>定量的評価チャート</h4><div class="chart-container" id="detail-quantitative-chart"></div></div></div>
                 ${comparisonHTML}
-                <div class="evaluation-details-section"><h3>詳細評価</h3><div class="table-container"><table class="table"><thead><tr><th>カテゴリ</th><th>評価項目</th><th>スコア</th><th>コメント</th></tr></thead><tbody>
-                    ${allItems.length > 0 ? allItems.map(item => `
-                        <tr><td>${item.categoryName}</td><td>${item.itemName}</td><td>${item.score.toFixed(1)}</td><td>${item.comment || ''}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align: center;">評価項目への入力がありません。</td></tr>`}
-                </tbody></table></div></div>
+                <div class="evaluation-details-section">
+                    <h3>詳細評価</h3>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead><tr><th>カテゴリ</th><th>評価項目</th><th>スコア</th><th>コメント</th></tr></thead>
+                            <tbody>
+                                ${allItems.length > 0 ? allItems.map(item => `
+                                    <tr><td>${item.categoryName}</td><td>${item.itemName}</td><td>${item.score.toFixed(1)}</td><td>${item.comment || ''}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align: center;">評価項目への入力がありません。</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="form-section"><h3>総合コメント</h3><p class="comment-box">${evaluation.overallComment || 'コメントはありません。'}</p></div>
             </div>
         </div>`;
