@@ -1,4 +1,4 @@
-// assets/js/pages/goal-setting.js (新規作成)
+// assets/js/pages/goal-setting.js
 /**
  * goal-setting.js - 個人目標設定ページ
  */
@@ -8,8 +8,7 @@ async function showGoalSettingPage() {
     
     const mainContent = document.getElementById('main-content');
 
-    // UIの骨格を描画
-    mainContent.innerHTML = `maincontent.innerhtml = `
+    mainContent.innerHTML = `
         <div class="page">
             <div class="page-header">
                 <h1 class="page-title">個人目標設定</h1>
@@ -37,7 +36,5 @@ async function showGoalSettingPage() {
             </div>
         </div>
     `;
-
-    // 今後のステップでロジックを実装します
     // setupGoalSettingEventListeners(); 
 }
