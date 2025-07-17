@@ -1,3 +1,4 @@
+// router.js の全コード（修正版）
 /**
  * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
@@ -6,17 +7,14 @@ class Router {
         this.routes = {};
         this.currentPath = '/';
         
-        // ページが読み込まれた時とハッシュが変わった時に処理を実行
         window.addEventListener('load', this.handleRouteChange.bind(this));
         window.addEventListener('hashchange', this.handleRouteChange.bind(this));
     }
 
-    // ルートを定義する
     addRoute(path, component) {
         this.routes[path] = component;
     }
 
-    // URLのハッシュを元に、表示するページを決定する
     handleRouteChange() {
         const pathWithQuery = window.location.hash.slice(1) || '/';
         this.currentPath = pathWithQuery.split('?')[0];
@@ -25,34 +23,28 @@ class Router {
         let component = this.routes[routeKey];
 
         if (authManager.isAuthenticated()) {
-            // --- ログイン済みユーザーの処理 ---
             if (this.currentPath === '/') {
-                return this.navigate('/dashboard'); // ルートパスならダッシュボードへ
+                return this.navigate('/dashboard');
             }
             if (!component) {
-                component = this.routes['/dashboard']; // 存在しないパスならダッシュボードへ
+                component = this.routes['/dashboard'];
             }
         } else {
-            // --- ログアウト状態のユーザーの処理 ---
-            const allowedGuestRoutes = ['/', '/register-admin'];
+            // ▼▼▼ この配列に /register を追加 ▼▼▼
+            const allowedGuestRoutes = ['/', '/register-admin', '/register'];
             
-            // '/register?token=...' のような動的なルートを許可
-            const isInvitationRoute = this.currentPath.startsWith('/register') && pathWithQuery.includes('token');
-
-            if (!allowedGuestRoutes.includes(this.currentPath) && !isInvitationRoute) {
-                 component = this.routes['/']; // 許可されたルートでない場合は、ログインページに強制的に戻す
+            if (!allowedGuestRoutes.includes(this.currentPath)) {
+                component = this.routes['/'];
             }
         }
 
         this.render(component);
     }
     
-    // 指定したパスに移動する
     navigate(path) {
         window.location.hash = path;
     }
     
-    // パラメータ付きのルート（例: /evaluations/:id）を見つける
     findRouteKey(path) {
         if (this.routes[path]) return path;
         for (const routeKey in this.routes) {
@@ -68,7 +60,6 @@ class Router {
         return null;
     }
 
-    // パスからパラメータを抽出する
     extractParams(path, routeKey) {
         const params = {};
         const routeSegments = routeKey.split('/');
@@ -79,9 +70,8 @@ class Router {
             }
         });
         return params;
-    }
+    }}
 
-    // ページを描画する
     render(component) {
         const mainContent = document.getElementById('main-content');
         if (typeof component === 'function') {
@@ -90,7 +80,7 @@ class Router {
             const routeKey = this.findRouteKey(this.currentPath);
             if (routeKey && routeKey.includes(':')) {
                 const params = this.extractParams(this.currentPath, routeKey);
-                component(params.id); // :id パラメータを渡す
+                component(params.id);
             } else {
                 component();
             }
