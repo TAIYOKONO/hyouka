@@ -1,4 +1,4 @@
-// router.js の全コード（URL解釈を修正した最終版）
+// router.js の全コード（デバッグ情報表示版）
 /**
  * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
@@ -16,34 +16,53 @@ class Router {
     }
 
     handleRouteChange() {
-        // ▼▼▼ ここからURL解釈のロジックを修正 ▼▼▼
+        console.log('--- Router Debug Start ---');
+        
         const hash = window.location.hash.slice(1);
-        let path = '/'; // デフォルトはルートパス
+        console.log('Router Debug: window.location.hash is', window.location.hash);
+
+        let path = '/';
         if (hash) {
             path = '/' + hash.split('?')[0];
         }
         this.currentPath = path;
-        // ▲▲▲ 修正ここまで ▲▲▲
+        console.log('Router Debug: Calculated currentPath is', this.currentPath);
         
         const routeKey = this.findRouteKey(this.currentPath);
-        let component = this.routes[routeKey];
+        console.log('Router Debug: Found routeKey is', routeKey);
 
-        if (authManager.isAuthenticated()) {
+        let component = this.routes[routeKey];
+        console.log('Router Debug: Initial component is', component ? component.name : 'null');
+
+        const isAuthenticated = authManager.isAuthenticated();
+        console.log('Router Debug: isAuthenticated?', isAuthenticated);
+
+        if (isAuthenticated) {
+            console.log('Router Debug: Handling as AUTHENTICATED user.');
             if (this.currentPath === '/') {
+                console.log('Router Debug: Path is "/", navigating to /dashboard');
                 return this.navigate('/dashboard');
             }
             if (!component) {
+                console.log('Router Debug: No component found, defaulting to dashboard.');
                 component = this.routes['/dashboard'];
             }
         } else {
+            console.log('Router Debug: Handling as GUEST user.');
             const allowedGuestRoutes = ['/', '/register-admin', '/register'];
+            console.log('Router Debug: Allowed guest routes are', allowedGuestRoutes);
             
             if (!allowedGuestRoutes.includes(this.currentPath)) {
+                console.log('Router Debug: Path not in allowed guest routes, navigating to login page.');
                 component = this.routes['/'];
+            } else {
+                console.log('Router Debug: Path IS in allowed guest routes.');
             }
         }
 
+        console.log('Router Debug: Final component to render is', component ? component.name : 'null');
         this.render(component);
+        console.log('--- Router Debug End ---');
     }
     
     navigate(path) {
@@ -90,6 +109,7 @@ class Router {
                 component();
             }
         } else {
+            console.log('Router Debug: Render failed because component is not a function.');
             mainContent.innerHTML = `<h2>ページが見つかりません</h2>`;
         }
     }
