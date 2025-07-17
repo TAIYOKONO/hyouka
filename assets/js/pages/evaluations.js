@@ -7,7 +7,9 @@ async function showEvaluations() {
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '評価一覧' }]);
     
     const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;
+    mainContent.innerHTML = `<div class="page-content"><p>評価一覧を読み込み中...</p></div>`;mainContent.innerHTML = `
+評価一覧を読み込み中...
+`;`;
 
     try {
         const evaluations = await api.getEvaluations();
