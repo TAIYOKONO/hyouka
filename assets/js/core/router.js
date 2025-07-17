@@ -1,4 +1,4 @@
-// router.js の全コード（修正版）
+// router.js の全コード（URL解釈を修正した最終版）
 /**
  * router.js - 建設業評価システム ルーティング管理 (最終確定版)
  */
@@ -16,8 +16,14 @@ class Router {
     }
 
     handleRouteChange() {
-        const pathWithQuery = window.location.hash.slice(1) || '/';
-        this.currentPath = pathWithQuery.split('?')[0];
+        // ▼▼▼ ここからURL解釈のロジックを修正 ▼▼▼
+        const hash = window.location.hash.slice(1);
+        let path = '/'; // デフォルトはルートパス
+        if (hash) {
+            path = '/' + hash.split('?')[0];
+        }
+        this.currentPath = path;
+        // ▲▲▲ 修正ここまで ▲▲▲
         
         const routeKey = this.findRouteKey(this.currentPath);
         let component = this.routes[routeKey];
@@ -30,7 +36,6 @@ class Router {
                 component = this.routes['/dashboard'];
             }
         } else {
-            // ▼▼▼ この配列に /register を追加 ▼▼▼
             const allowedGuestRoutes = ['/', '/register-admin', '/register'];
             
             if (!allowedGuestRoutes.includes(this.currentPath)) {
@@ -70,7 +75,7 @@ class Router {
             }
         });
         return params;
-    }}
+    }
 
     render(component) {
         const mainContent = document.getElementById('main-content');
