@@ -290,3 +290,14 @@
 .tab-panel.active {
     display: block;表示：ブロック;
 }
+/* components.css の末尾に追記 */
+
+/* --- 表示切り替えボタン --- */
+.view-switcher {
+    margin-bottom: var(--spacing-md);
+    text-align: right;
+}
+.view-switcher .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
