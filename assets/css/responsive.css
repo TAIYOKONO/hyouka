@@ -1,31 +1,53 @@
-/* responsive.css の全コード（モバイルナビゲーション対応版） */
+/* responsive.css の全コード（レイアウト崩れ修正版） */
 /**
  * responsive.css - レスポンシブ対応
  */
 
-/* タブレットサイズ以下 */
+/* タブレットサイズ以下 (992px) */
 @media (max-width: 992px) {
-    .main-navigation, .user-menu {
-        display: none; /* PC用のメニューを非表示 */
+    /* PC用のナビゲーションとユーザーメニュー全体を非表示に */
+    .main-navigation, 
+    .user-menu {
+        display: none;
     }
+    /* モバイル用のハンバーガーボタンを表示 */
     .mobile-menu-toggle {
-        display: block; /* モバイル用のハンバーガーボタンを表示 */
-    }
-    .header-content {
-        justify-content: space-between;
-    }
-    .logo {
-        flex: 1;
+        display: block; 
     }
 }
 
+/* スマートフォンサイズ (768px) */
 @media (max-width: 768px) {
-    .main-content { padding: 1rem; }
-    .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .header-content {
+        height: auto;
+        padding: 0.5rem 0;
+    }
+    .main-content {
+        padding: 1rem;
+    }
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .settings-layout {
+        flex-direction: column;
+    }
+    .settings-sidebar {
+        flex: none;
+        width: 100%;
+    }
 }
 
+/* 小さなスマートフォンサイズ (480px) */
 @media (max-width: 480px) {
-    .stats-grid { grid-template-columns: 1fr; }
-    .page-title { font-size: var(--font-size-xl); }
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .page-title {
+        font-size: var(--font-size-xl);
+    }
 }
