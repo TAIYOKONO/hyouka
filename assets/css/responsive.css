@@ -1,21 +1,19 @@
-/* responsive.css の全コード（ヘッダー修正版）*/
+/* responsive.css の全コード（最終版）*/
 /**
  * responsive.css - レスポンシブ対応
  */
 
 /* タブレットサイズ以下 (992px) */
 @media (max-width: 992px) {
-    /* PC用の主要なメニュー要素を非表示に */
-    .main-navigation, 
-    .user-menu,
-    .logo {
+    /* PC用のメニュー要素をまとめて非表示に */
+    .pc-nav-elements {
         display: none;
     }
     /* モバイル用のハンバーガーボタンを表示 */
     .mobile-menu-toggle {
         display: block; 
     }
-    /* ヘッダーのコンテンツを右端揃えに（ハンバーガーボタンのみになるため） */
+    /* ヘッダーのコンテンツを右端揃えに */
     .header-content {
         justify-content: flex-end;
     }
