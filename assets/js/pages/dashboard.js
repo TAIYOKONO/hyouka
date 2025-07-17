@@ -1,3 +1,4 @@
+// dashboard.js の全コード（修正版）
 /**
  * dashboard.js - ダッシュボードページ (最終版)
  */
@@ -9,8 +10,8 @@ async function showDashboard() {
     mainContent.innerHTML = `<div class="page-content"><p>読み込み中...</p></div>`;
 
     try {
+        // ▼▼▼ getEvaluationItemsの呼び出しを削除 ▼▼▼
         const evaluations = await api.getEvaluations();
-        const evaluationItems = await api.getEvaluationItems();
 
         const completedEvaluations = evaluations.filter(e => e.status === 'completed');
         const totalRating = completedEvaluations.reduce((sum, e) => sum + (e.overallRating || 0), 0);
@@ -26,8 +27,7 @@ async function showDashboard() {
                         <div class="stat-card"><div class="stat-number">${evaluations.length}</div><div class="stat-label">総評価数</div></div>
                         <div class="stat-card"><div class="stat-number">${completedEvaluations.length}</div><div class="stat-label">完了済み</div></div>
                         <div class="stat-card"><div class="stat-number">${averageRating}</div><div class="stat-label">平均評価</div></div>
-                        <div class="stat-card"><div class="stat-number">${evaluationItems.length}</div><div class="stat-label">評価項目数</div></div>
-                    </div>
+                        </div>
                     <h3>最近の活動</h3>
                     <div class="table-container">
                         <table class="table">
@@ -36,7 +36,7 @@ async function showDashboard() {
                                 ${evaluations.length === 0 ? `<tr><td colspan="6" style="text-align: center;">データがありません</td></tr>` : ''}
                                 ${evaluations.map(e => `
                                     <tr>
-                                        <td>${e.subordinate||''}</td><td>${e.evaluator||''}</td><td>${e.period||''}</td>
+                                        <td>${e.subordinateName||''}</td><td>${e.evaluatorName||''}</td><td>${e.period||''}</td>
                                         <td>${e.status||''}</td><td>${e.updatedAt ? new Date(e.updatedAt.seconds * 1000).toLocaleDateString() : ''}</td>
                                         <td><button class="btn btn-secondary btn-view-detail" data-id="${e.id}">詳細</button></td>
                                     </tr>`).join('')}
