@@ -278,3 +278,24 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
 }
+/* components.css の末尾に追記 */
+
+/* --- 評価入力フォーム（左右分割） --- */
+.evaluation-item-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.evaluation-item-row-grid .form-group {
+    margin-bottom: 0;
+}
+
+.evaluation-item-row-grid h5 {
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+}}
