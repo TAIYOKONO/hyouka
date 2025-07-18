@@ -16,7 +16,7 @@ function renderGoalInputs() {
         container.innerHTML = '<p>「+ 目標を追加」ボタンから目標を設定してください。</p>';
     } else {
         container.innerHTML = goalSettingState.goals.map((goal, index) => `
-            <div class="form-section goal-item-row" data-index="${index}">
+            <div class="form-section goal-item-row" data-index="${index}" style="display: flex; gap: 1rem; align-items: flex-end;">
                 <div class="form-group" style="flex-grow: 1;">
                     <label>定性目標 ${index + 1}</label>
                     <textarea class="form-control goal-text" rows="3" placeholder="具体的な目標を入力">${goal.goalText}</textarea>
@@ -25,7 +25,7 @@ function renderGoalInputs() {
                     <label>ウェイト (%)</label>
                     <input type="number" class="form-control goal-weight" min="0" max="100" value="${goal.weight}">
                 </div>
-                <div class="form-group" style="align-self: flex-end;">
+                <div class="form-group">
                     <button class="btn btn-danger btn-sm btn-remove-goal" data-index="${index}">削除</button>
                 </div>
             </div>
@@ -39,7 +39,7 @@ function updateTotalWeight() {
     if (!totalWeightEl) return;
     const total = goalSettingState.goals.reduce((sum, goal) => sum + (goal.weight || 0), 0);
     totalWeightEl.textContent = `${total}%`;
-    totalWeightEl.style.color = total === 100 ? 'var(--color-success)' : 'var(--color-danger)';
+    totalWeightEl.style.color = total === 100 ? 'green' : 'red';
 }
 
 function handleGoalDataChange() {
@@ -65,7 +65,7 @@ function removeGoal(index) {
 }
 
 async function handleApplyGoals() {
-    handleGoalDataChange(); // 最新の入力値をstateに反映
+    handleGoalDataChange();
     const total = goalSettingState.goals.reduce((sum, goal) => sum + (goal.weight || 0), 0);
     if (total !== 100) {
         return showNotification('合計ウェイトが100%になるように調整してください。', 'error');
@@ -77,13 +77,11 @@ async function handleApplyGoals() {
             id: goalSettingState.currentGoalsDoc?.id || null,
             period: goalSettingState.period,
             goals: goalSettingState.goals,
-            status: 'pending_approval' // ステータスを承認待ちに
+            status: 'pending_approval'
         };
         await api.saveQualitativeGoals(dataToSave);
         showNotification('目標を申請しました。管理者の承認をお待ちください。', 'success');
-        // 申請後はボタンを無効化するなど
         document.getElementById('btn-apply-goals').disabled = true;
-
     } catch (error) {
         console.error('Failed to apply goals:', error);
         showNotification('目標の申請に失敗しました。', 'error');
@@ -99,15 +97,13 @@ async function loadGoalsForPeriod(period) {
         goalSettingState.goals = doc ? doc.goals : [];
         renderGoalInputs();
 
-        // 承認済みの場合は編集不可に
-        const isApproved = doc && doc.status === 'approved';
+        const isEditable = !doc || doc.status === 'draft';
         document.querySelectorAll('#goal-list-container input, #goal-list-container textarea, #btn-add-goal, #btn-apply-goals').forEach(el => {
-            el.disabled = isApproved;
+            el.disabled = !isEditable;
         });
-        if(isApproved) {
-             showNotification('この期間の目標は承認済みのため編集できません。', 'info');
+        if (!isEditable) {
+             showNotification('この期間の目標は申請済みか承認済みのため編集できません。', 'info');
         }
-
     } catch(error) {
         console.error("Failed to load goals:", error);
     }
@@ -121,25 +117,21 @@ function setupGoalSettingEventListeners() {
         if (e.target.id === 'btn-apply-goals') handleApplyGoals();
         if (e.target.classList.contains('btn-remove-goal')) removeGoal(parseInt(e.target.dataset.index));
     };
-
     const handleInput = (e) => {
         if (e.target.classList.contains('goal-text') || e.target.classList.contains('goal-weight')) {
             handleGoalDataChange();
         }
     };
-
     const handlePeriodChange = (e) => {
         if (e.target.id === 'goal-period-select') {
             loadGoalsForPeriod(e.target.value);
         }
     };
 
-    // イベントリスナーが重複しないように一度クリア
     container.removeEventListener('click', handleClick);
     container.removeEventListener('input', handleInput);
     document.getElementById('goal-period-select')?.removeEventListener('change', handlePeriodChange);
 
-    // 新しく登録
     container.addEventListener('click', handleClick);
     container.addEventListener('input', handleInput);
     document.getElementById('goal-period-select')?.addEventListener('change', handlePeriodChange);
