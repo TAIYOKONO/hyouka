@@ -44,7 +44,6 @@ class NavigationManager {
         this.menuItems = [
             { id: 'dashboard', label: 'ダッシュボード', path: '#/dashboard', roles: ['admin', 'evaluator', 'worker'] },
             { id: 'evaluations', label: '評価一覧', path: '#/evaluations', roles: ['admin', 'evaluator', 'worker'] },
-            // ▼▼▼ この行を追加 ▼▼▼
             { id: 'goal-setting', label: '個人目標設定', path: '#/goal-setting', roles: ['evaluator', 'worker'] },
             { id: 'users', label: 'ユーザー管理', path: '#/users', roles: ['admin', 'evaluator'] },
             { id: 'settings', label: '評価項目設定', path: '#/settings', roles: ['admin'] },
