@@ -1,4 +1,4 @@
-// assets/js/pages/goal-approvals.js (新規作成)
+// assets/js/pages/goal-approvals.js の全コード（ロジック実装版）
 /**
  * goal-approvals.js - 個人目標の承認ページ
  */
@@ -52,9 +52,42 @@ async function showGoalApprovalsPage() {
                     </div>
                 </div>
             </div>`;
+        
+        // ▼▼▼ ここからイベントリスナーを追加 ▼▼▼
+        attachGoalApprovalEventListeners();
 
     } catch (error) {
         console.error("Failed to load pending goals:", error);
         mainContent.innerHTML = `<div class="page-content"><p>読み込みに失敗しました。</p></div>`;
     }
+}
+
+function attachGoalApprovalEventListeners() {
+    const mainContent = document.getElementById('main-content');
+
+    mainContent.addEventListener('click', async (e) => {
+        const target = e.target;
+
+        // 「承認」ボタンの処理
+        if (target.classList.contains('btn-approve-goal')) {
+            const docId = target.dataset.id;
+            if (confirm('この目標申請を承認しますか？')) {
+                try {
+                    await api.updateQualitativeGoalStatus(docId, 'approved');
+                    showNotification('目標を承認しました', 'success');
+                    showGoalApprovalsPage(); // 承認後にリストを再読み込み
+                } catch (error) {
+                    console.error("Failed to approve goal:", error);
+                    showNotification('承認処理に失敗しました', 'error');
+                }
+            }
+        }
+
+        // 「内容確認」ボタンの処理（今後のステップで実装）
+        if (target.classList.contains('btn-view-goal')) {
+            const docId = target.dataset.id;
+            // TODO: 目標の詳細をモーダルで表示する機能
+            alert(`ID: ${docId} の目標内容を確認するモーダルをここに実装します。`);
+        }
+    });
 }
