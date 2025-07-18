@@ -21,7 +21,7 @@ class ConstructionEvaluationApp {
         this.router.addRoute('/evaluations/new', showNewEvaluationForm);
         this.router.addRoute('/users', showUsers);
         this.router.addRoute('/settings', showSettingsPage);
-        this.router.addRoute('/goal-setting', showGoalSettingPage); // ▼▼▼ この行を追加 ▼▼▼
+        this.router.addRoute('/goal-setting', showGoalSettingPage);
         this.router.addRoute('/register', showRegistrationPage);
         this.router.addRoute('/evaluations/:id', viewEvaluation);
         this.router.addRoute('/register-admin', showAdminRegistrationForm);
