@@ -1,4 +1,4 @@
-// api.js の全コード（個人目標設定メソッド追加版）
+// api.js の全コード（目標承認メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -204,19 +204,16 @@ class ApiClient {
             return docRef.id;
         }
     }
-
-    // ▼▼▼ ここから追加 ▼▼▼
+    
     async getQualitativeGoals(userId, period) {
         const tenantId = this._getTenantId();
         if (!tenantId || !userId || !period) return null;
-    
         const snapshot = await this.db.collection('qualitativeGoals')
             .where('tenantId', '==', tenantId)
             .where('userId', '==', userId)
             .where('period', '==', period)
             .limit(1)
             .get();
-    
         if (snapshot.empty) return null;
         const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() };
@@ -226,14 +223,12 @@ class ApiClient {
         const tenantId = this._getTenantId();
         const currentUser = window.authManager.getCurrentUser();
         if (!tenantId || !currentUser) throw new Error("ユーザー情報が取得できません。");
-    
         const dataToSave = {
             ...goalData,
             tenantId: tenantId,
             userId: currentUser.uid,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
         if (goalData.id) {
             await this.db.collection('qualitativeGoals').doc(goalData.id).set(dataToSave, { merge: true });
             return goalData.id;
@@ -243,6 +238,28 @@ class ApiClient {
             return docRef.id;
         }
     }
-    // ▲▲▲ 追加ここまで ▲▲▲
+
+    async getPendingGoals() {
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        const snapshot = await this.db.collection('qualitativeGoals')
+            .where('tenantId', '==', tenantId)
+            .where('status', '==', 'pending_approval')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async updateQualitativeGoalStatus(docId, status) {
+        const tenantId = this._getTenantId();
+        const docRef = this.db.collection('qualitativeGoals').doc(docId);
+        const doc = await docRef.get();
+        if (!doc.exists || doc.data().tenantId !== tenantId) {
+            throw new Error("対象の目標が見つからないか、権限がありません。");
+        }
+        await docRef.update({
+            status: status,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
 }
 window.api = new ApiClient();
