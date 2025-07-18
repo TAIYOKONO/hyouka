@@ -1,4 +1,3 @@
-// api.js の全コード（目標承認メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -204,7 +203,7 @@ class ApiClient {
             return docRef.id;
         }
     }
-
+    
     async getQualitativeGoals(userId, period) {
         const tenantId = this._getTenantId();
         if (!tenantId || !userId || !period) return null;
@@ -248,6 +247,19 @@ class ApiClient {
             .where('status', '==', 'pending_approval')
             .get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async updateQualitativeGoalStatus(docId, status) {
+        const tenantId = this._getTenantId();
+        const docRef = this.db.collection('qualitativeGoals').doc(docId);
+        const doc = await docRef.get();
+        if (!doc.exists || doc.data().tenantId !== tenantId) {
+            throw new Error("対象の目標が見つからないか、権限がありません。");
+        }
+        await docRef.update({
+            status: status,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
     // ▲▲▲ 追加ここまで ▲▲▲
 }
