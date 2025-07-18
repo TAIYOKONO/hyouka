@@ -1,4 +1,3 @@
-// assets/js/pages/goal-approvals.js の全コード（修正完了版）
 /**
  * goal-approvals.js - 個人目標の承認ページ
  */
@@ -8,6 +7,7 @@ let goalApprovalsState = {
     usersById: {}
 };
 
+// クリックイベントを処理する専用のハンドラ関数
 function handleGoalApprovalsClick(e) {
     const target = e.target;
     if (target.matches('.btn-view-goal')) {
@@ -28,6 +28,7 @@ async function showGoalApprovalsPage() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page"><div class="page-content"><p>承認待ちの目標を読み込み中...</p></div></div>`;
     
+    // イベントリスナーを一度クリアして再登録する
     mainContent.removeEventListener('click', handleGoalApprovalsClick);
 
     try {
