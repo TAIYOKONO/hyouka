@@ -1,22 +1,39 @@
+// assets/js/pages/goal-approvals.js の全コード（最終修正版）
 /**
  * goal-approvals.js - 個人目標の承認ページ
  */
 
+// ▼▼▼ 修正点 ▼▼▼
+// 状態管理はユーザー名とのマッピングのみに利用。クリック時のデータはボタンに埋め込む。
 let goalApprovalsState = {
-    pendingGoals: [],
     usersById: {}
 };
 
 // クリックイベントを処理する専用のハンドラ関数
 function handleGoalApprovalsClick(e) {
-    const target = e.target;
-    if (target.matches('.btn-view-goal')) {
-        openGoalDetailModal(target.dataset.id);
-    } else if (target.matches('#btn-approve-goal')) {
-        handleApprovalAction(target.dataset.id, 'approved');
-    } else if (target.matches('#btn-reject-goal')) {
-        handleApprovalAction(target.dataset.id, 'draft');
-    } else if (target.matches('#btn-close-goal-modal') || target.matches('#goal-detail-modal')) {
+    const viewButton = e.target.closest('.btn-view-goal');
+    if (viewButton) {
+        // ▼▼▼ 修正点 ▼▼▼
+        // ボタンに埋め込まれたJSON文字列をパースしてオブジェクトに戻す
+        const goalData = JSON.parse(viewButton.dataset.goal);
+        openGoalDetailModal(goalData);
+        return;
+    }
+
+    const approveButton = e.target.closest('#btn-approve-goal');
+    if (approveButton) {
+        handleApprovalAction(approveButton.dataset.id, 'approved');
+        return;
+    }
+
+    const rejectButton = e.target.closest('#btn-reject-goal');
+    if (rejectButton) {
+        handleApprovalAction(rejectButton.dataset.id, 'draft');
+        return;
+    }
+
+    const closeModalButton = e.target.closest('#btn-close-goal-modal');
+    if (closeModalButton || e.target.matches('#goal-detail-modal')) {
         closeGoalDetailModal();
     }
 }
@@ -28,7 +45,6 @@ async function showGoalApprovalsPage() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page"><div class="page-content"><p>承認待ちの目標を読み込み中...</p></div></div>`;
     
-    // イベントリスナーを一度クリアして再登録する
     mainContent.removeEventListener('click', handleGoalApprovalsClick);
 
     try {
@@ -37,7 +53,6 @@ async function showGoalApprovalsPage() {
             api.getUsers()
         ]);
 
-        goalApprovalsState.pendingGoals = pendingGoals;
         goalApprovalsState.usersById = allUsers.reduce((acc, user) => {
             acc[user.id] = user.name;
             return acc;
@@ -50,7 +65,7 @@ async function showGoalApprovalsPage() {
                     <div class="table-container">
                         <table class="table">
                             <thead><tr><th>申請者</th><th>評価期間</th><th>申請日</th><th>操作</th></tr></thead>
-                            <tbody>${renderGoalApprovalRows()}</tbody>
+                            <tbody>${renderGoalApprovalRows(pendingGoals)}</tbody>
                         </table>
                     </div>
                 </div>
@@ -66,27 +81,36 @@ async function showGoalApprovalsPage() {
     }
 }
 
-function renderGoalApprovalRows() {
-    if (goalApprovalsState.pendingGoals.length === 0) {
+// ▼▼▼ 修正点 ▼▼▼
+// 外部のstateに依存せず、引数で受け取ったデータで描画する
+function renderGoalApprovalRows(pendingGoals) {
+    if (pendingGoals.length === 0) {
         return `<tr><td colspan="4" style="text-align: center;">承認待ちの目標はありません。</td></tr>`;
     }
-    return goalApprovalsState.pendingGoals.map(goalDoc => `
-        <tr>
-            <td>${goalApprovalsState.usersById[goalDoc.userId] || '不明なユーザー'}</td>
-            <td>${goalDoc.period}</td>
-            <td>${new Date(goalDoc.updatedAt.seconds * 1000).toLocaleDateString()}</td>
-            <td><button class="btn btn-secondary btn-sm btn-view-goal" data-id="${goalDoc.id}">内容確認</button></td>
-        </tr>
-    `).join('');
+    return pendingGoals.map(goalDoc => {
+        // ▼▼▼ 修正点 ▼▼▼
+        // HTMLのエスケープを考慮し、JSON文字列をシングルクォートで囲む
+        const goalJson = JSON.stringify(goalDoc).replace(/'/g, '&apos;');
+        return `
+            <tr>
+                <td>${goalApprovalsState.usersById[goalDoc.userId] || '不明なユーザー'}</td>
+                <td>${goalDoc.period}</td>
+                <td>${new Date(goalDoc.updatedAt.seconds * 1000).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-secondary btn-sm btn-view-goal" data-goal='${goalJson}'>内容確認</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderGoalDetailModal() {
     return `<div id="goal-detail-modal" class="modal"><div class="modal-content" style="max-width: 700px;"><div class="modal-header"><h3 class="modal-title" id="goal-modal-title">目標内容の確認</h3><button class="modal-close" id="btn-close-goal-modal">&times;</button></div><div class="modal-body" id="goal-modal-body"></div><div class="modal-footer" id="goal-modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;"></div></div></div>`;
 }
 
-function openGoalDetailModal(docId) {
-    const goalDoc = goalApprovalsState.pendingGoals.find(g => g.id === docId);
-    
+// ▼▼▼ 修正点 ▼▼▼
+// IDではなく、目標オブジェクトそのものを受け取るように変更
+function openGoalDetailModal(goalDoc) {
     if (!goalDoc) {
         showNotification('対象の目標データが見つかりませんでした。', 'error');
         return;
@@ -98,7 +122,7 @@ function openGoalDetailModal(docId) {
     const applicantName = goalApprovalsState.usersById[goalDoc.userId] || '不明なユーザー';
     
     modalBody.innerHTML = `<div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;"><div><strong>申請者:</strong> ${applicantName}</div><div><strong>評価期間:</strong> ${goalDoc.period}</div></div><h4>申請された目標</h4><ul style="list-style: none; padding: 0;">${goalDoc.goals.map(goal => `<li style="background: #f9f9f9; border: 1px solid #eee; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px;"><p style="margin: 0;"><strong>目標:</strong> ${goal.goalText}</p><p style="margin: 0.5rem 0 0; text-align: right;"><strong>ウェイト:</strong> ${goal.weight}%</p></li>`).join('')}</ul>`;
-    modalFooter.innerHTML = `<button class="btn btn-danger" id="btn-reject-goal" data-id="${docId}">差し戻し</button><button class="btn btn-success" id="btn-approve-goal" data-id="${docId}">承認</button>`;
+    modalFooter.innerHTML = `<button class="btn btn-danger" id="btn-reject-goal" data-id="${goalDoc.id}">差し戻し</button><button class="btn btn-success" id="btn-approve-goal" data-id="${goalDoc.id}">承認</button>`;
     modal.classList.add('show');
 }
 
