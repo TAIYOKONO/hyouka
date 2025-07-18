@@ -1,4 +1,4 @@
-// api.js の全コード（個人目標設定メソッド追加版）
+// api.js の全コード（目標承認メソッド追加版）
 /**
  * API通信クライアント (最終版)
  */
@@ -205,18 +205,15 @@ class ApiClient {
         }
     }
 
-    // ▼▼▼ ここから追加 ▼▼▼
     async getQualitativeGoals(userId, period) {
         const tenantId = this._getTenantId();
         if (!tenantId || !userId || !period) return null;
-    
         const snapshot = await this.db.collection('qualitativeGoals')
             .where('tenantId', '==', tenantId)
             .where('userId', '==', userId)
             .where('period', '==', period)
             .limit(1)
             .get();
-    
         if (snapshot.empty) return null;
         const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() };
@@ -226,14 +223,12 @@ class ApiClient {
         const tenantId = this._getTenantId();
         const currentUser = window.authManager.getCurrentUser();
         if (!tenantId || !currentUser) throw new Error("ユーザー情報が取得できません。");
-    
         const dataToSave = {
             ...goalData,
             tenantId: tenantId,
             userId: currentUser.uid,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
-        
         if (goalData.id) {
             await this.db.collection('qualitativeGoals').doc(goalData.id).set(dataToSave, { merge: true });
             return goalData.id;
@@ -242,6 +237,17 @@ class ApiClient {
             const docRef = await this.db.collection('qualitativeGoals').add(dataToSave);
             return docRef.id;
         }
+    }
+
+    // ▼▼▼ ここから追加 ▼▼▼
+    async getPendingGoals() {
+        const tenantId = this._getTenantId();
+        if (!tenantId) return [];
+        const snapshot = await this.db.collection('qualitativeGoals')
+            .where('tenantId', '==', tenantId)
+            .where('status', '==', 'pending_approval')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
     // ▲▲▲ 追加ここまで ▲▲▲
 }
