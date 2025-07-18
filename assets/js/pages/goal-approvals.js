@@ -10,7 +10,15 @@ async function showGoalApprovalsPage() {
     mainContent.innerHTML = `<div class="page-content"><p>承認待ちの目標を読み込み中...</p></div>`;
 
     try {
-        const pendingGoals = await api.getPendingGoals();
+        const [pendingGoals, allUsers] = await Promise.all([
+            api.getPendingGoals(),
+            api.getUsers()
+        ]);
+
+        const usersById = allUsers.reduce((acc, user) => {
+            acc[user.id] = user.name;
+            return acc;
+        }, {});
         
         mainContent.innerHTML = `
             <div class="page">
@@ -30,7 +38,8 @@ async function showGoalApprovalsPage() {
                                 ${pendingGoals.length === 0 ? `<tr><td colspan="4" style="text-align: center;">承認待ちの目標はありません。</td></tr>` : ''}
                                 ${pendingGoals.map(goalDoc => `
                                     <tr>
-                                        <td>${goalDoc.userId}</td> <td>${goalDoc.period}</td>
+                                        <td>${usersById[goalDoc.userId] || goalDoc.userId}</td>
+                                        <td>${goalDoc.period}</td>
                                         <td>${new Date(goalDoc.updatedAt.seconds * 1000).toLocaleDateString()}</td>
                                         <td>
                                             <button class="btn btn-secondary btn-sm btn-view-goal" data-id="${goalDoc.id}">内容確認</button>
