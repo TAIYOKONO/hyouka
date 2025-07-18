@@ -1,4 +1,4 @@
-// assets/js/pages/goal-approvals.js の全コード（ステップ1-B完了版）
+// assets/js/pages/goal-approvals.js の全コード（イベントリスナー修正版）
 /**
  * goal-approvals.js - 個人目標の承認ページ
  */
@@ -9,6 +9,21 @@ let goalApprovalsState = {
     usersById: {}
 };
 
+// クリックイベントを処理する専用の関数を定義
+function handleGoalApprovalsClick(e) {
+    const target = e.target;
+
+    if (target.matches('.btn-view-goal')) {
+        openGoalDetailModal(target.dataset.id);
+    } else if (target.matches('#btn-approve-goal')) {
+        handleApprovalAction(target.dataset.id, 'approved');
+    } else if (target.matches('#btn-reject-goal')) {
+        handleApprovalAction(target.dataset.id, 'draft');
+    } else if (target.matches('#btn-close-goal-modal') || target.matches('#goal-detail-modal')) {
+        closeGoalDetailModal();
+    }
+}
+
 async function showGoalApprovalsPage() {
     if (window.navigation) window.navigation.render();
     updateBreadcrumbs([{ label: 'ダッシュボード', path: '#/dashboard' }, { label: '個人目標の承認' }]);
@@ -16,13 +31,15 @@ async function showGoalApprovalsPage() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `<div class="page"><div class="page-content"><p>承認待ちの目標を読み込み中...</p></div></div>`;
 
+    // ▼▼▼ 修正点：イベントリスナーを一旦削除 ▼▼▼
+    mainContent.removeEventListener('click', handleGoalApprovalsClick);
+
     try {
         const [pendingGoals, allUsers] = await Promise.all([
             api.getPendingGoals(),
             api.getUsers()
         ]);
 
-        // 取得したデータを状態に保存
         goalApprovalsState.pendingGoals = pendingGoals;
         goalApprovalsState.usersById = allUsers.reduce((acc, user) => {
             acc[user.id] = user.name;
@@ -53,7 +70,8 @@ async function showGoalApprovalsPage() {
             ${renderGoalDetailModal()}
         `;
         
-        attachGoalApprovalEventListeners();
+        // ▼▼▼ 修正点：イベントリスナーを再登録 ▼▼▼
+        mainContent.addEventListener('click', handleGoalApprovalsClick);
 
     } catch (error) {
         console.error("Failed to load pending goals:", error);
@@ -85,10 +103,8 @@ function renderGoalDetailModal() {
                     <h3 class="modal-title" id="goal-modal-title">目標内容の確認</h3>
                     <button class="modal-close" id="btn-close-goal-modal">&times;</button>
                 </div>
-                <div class="modal-body" id="goal-modal-body">
-                    </div>
-                <div class="modal-footer" id="goal-modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;">
-                    </div>
+                <div class="modal-body" id="goal-modal-body"></div>
+                <div class="modal-footer" id="goal-modal-footer" style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #ddd;"></div>
             </div>
         </div>
     `;
@@ -107,7 +123,6 @@ function openGoalDetailModal(docId) {
 
     const applicantName = goalApprovalsState.usersById[goalDoc.userId] || '不明なユーザー';
     
-    // モーダルの中身を生成
     modalBody.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
             <div><strong>申請者:</strong> ${applicantName}</div>
@@ -123,8 +138,7 @@ function openGoalDetailModal(docId) {
             `).join('')}
         </ul>
     `;
-
-    // モーダルのフッターにボタンを生成
+    
     modalFooter.innerHTML = `
         <button class="btn btn-danger" id="btn-reject-goal" data-id="${docId}">差し戻し</button>
         <button class="btn btn-success" id="btn-approve-goal" data-id="${docId}">承認</button>
@@ -148,34 +162,9 @@ async function handleApprovalAction(docId, newStatus) {
         await api.updateQualitativeGoalStatus(docId, newStatus);
         showNotification(`目標を${actionText}しました`, 'success');
         closeGoalDetailModal();
-        await showGoalApprovalsPage(); // 承認後にリストを再読み込み
+        await showGoalApprovalsPage();
     } catch (error) {
         console.error(`Failed to ${actionText} goal:`, error);
         showNotification(`${actionText}処理に失敗しました`, 'error');
     }
-}
-
-function attachGoalApprovalEventListeners() {
-    const mainContent = document.getElementById('main-content');
-
-    mainContent.addEventListener('click', (e) => {
-        const target = e.target;
-
-        // 「内容確認」ボタン
-        if (target.classList.contains('btn-view-goal')) {
-            openGoalDetailModal(target.dataset.id);
-        }
-        // モーダル内の「承認」ボタン
-        if (target.id === 'btn-approve-goal') {
-            handleApprovalAction(target.dataset.id, 'approved');
-        }
-        // モーダル内の「差し戻し」ボタン
-        if (target.id === 'btn-reject-goal') {
-            handleApprovalAction(target.dataset.id, 'draft');
-        }
-        // モーダルを閉じる
-        if (target.id === 'btn-close-goal-modal' || target.id === 'goal-detail-modal') {
-            closeGoalDetailModal();
-        }
-    });
 }
