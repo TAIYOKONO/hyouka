@@ -1,4 +1,4 @@
-// assets/js/pages/goal-approvals.js の全コード（診断コード版）
+// assets/js/pages/goal-approvals.js の全コード（修正完了版）
 /**
  * goal-approvals.js - 個人目標の承認ページ
  */
@@ -10,9 +10,6 @@ let goalApprovalsState = {
 
 function handleGoalApprovalsClick(e) {
     const target = e.target;
-    // ===== 診断ログ【2】=====
-    console.log('診断【2】: クリックイベントが発生しました。ターゲット:', target);
-
     if (target.matches('.btn-view-goal')) {
         openGoalDetailModal(target.dataset.id);
     } else if (target.matches('#btn-approve-goal')) {
@@ -44,9 +41,6 @@ async function showGoalApprovalsPage() {
             acc[user.id] = user.name;
             return acc;
         }, {});
-        
-        // ===== 診断ログ【1】=====
-        console.log('診断【1】: APIからデータを取得し、stateに保存しました。現在のstate:', JSON.parse(JSON.stringify(goalApprovalsState)));
         
         mainContent.innerHTML = `
             <div class="page">
@@ -90,24 +84,41 @@ function renderGoalDetailModal() {
 }
 
 function openGoalDetailModal(docId) {
-    // ===== 診断ログ【3】=====
-    console.log(`診断【3】: openGoalDetailModalが呼び出されました。探すID: "${docId}"`);
-    console.log('診断【3.1】: findを実行する直前のstate:', JSON.parse(JSON.stringify(goalApprovalsState)));
-    
     const goalDoc = goalApprovalsState.pendingGoals.find(g => g.id === docId);
     
     if (!goalDoc) {
-        // ===== 診断ログ【4】=====
-        console.error('診断【4】: findの検索に失敗しました。goalDocは未定義です。');
         showNotification('対象の目標データが見つかりませんでした。', 'error');
         return;
     }
-
-    console.log('診断: findの検索に成功しました。見つかったデータ:', goalDoc);
 
     const modal = document.getElementById('goal-detail-modal');
     const modalBody = document.getElementById('goal-modal-body');
     const modalFooter = document.getElementById('goal-modal-footer');
     const applicantName = goalApprovalsState.usersById[goalDoc.userId] || '不明なユーザー';
     
-    modalBody.innerHTML = `<div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;"><div><strong>申請者:</strong> ${applicantName}</div><div><strong>評価期間:</strong> ${goalDoc.period}</div></div><h4>申請された目標</h4><ul style="list-style: none; padding: 0;">${goalDoc.goals.map(goal => `<li style="background: #f9f9f9; border:
+    modalBody.innerHTML = `<div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;"><div><strong>申請者:</strong> ${applicantName}</div><div><strong>評価期間:</strong> ${goalDoc.period}</div></div><h4>申請された目標</h4><ul style="list-style: none; padding: 0;">${goalDoc.goals.map(goal => `<li style="background: #f9f9f9; border: 1px solid #eee; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px;"><p style="margin: 0;"><strong>目標:</strong> ${goal.goalText}</p><p style="margin: 0.5rem 0 0; text-align: right;"><strong>ウェイト:</strong> ${goal.weight}%</p></li>`).join('')}</ul>`;
+    modalFooter.innerHTML = `<button class="btn btn-danger" id="btn-reject-goal" data-id="${docId}">差し戻し</button><button class="btn btn-success" id="btn-approve-goal" data-id="${docId}">承認</button>`;
+    modal.classList.add('show');
+}
+
+function closeGoalDetailModal() {
+    const modal = document.getElementById('goal-detail-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+async function handleApprovalAction(docId, newStatus) {
+    const actionText = newStatus === 'approved' ? '承認' : '差し戻し';
+    if (!confirm(`この目標申請を「${actionText}」しますか？`)) return;
+
+    try {
+        await api.updateQualitativeGoalStatus(docId, newStatus);
+        showNotification(`目標を${actionText}しました`, 'success');
+        closeGoalDetailModal();
+        await showGoalApprovalsPage();
+    } catch (error) {
+        console.error(`Failed to ${actionText} goal:`, error);
+        showNotification(`${actionText}処理に失敗しました`, 'error');
+    }
+}
