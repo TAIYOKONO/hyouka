@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8"><メタcharset = "utf-8">
+    <title>App.js 最小構成テスト</title>
+    <base href="/hyouka/">
+</head>
+<body>
+    <h1>App.js 読み込みテスト</h1>
+    <p>このページは、app.jsが単独で正しく読み込めるかを確認するためのテストページです。</p>
+
+    <script src="assets/js/core/app.js"></script>
+
+    <script>
+      try {
+        console.log("test.html: ConstructionEvaluationAppクラスのインスタンスを作成します...");
+        // init()を呼ぶと他のファイルがないためエラーになるので、クラスの宣言とインスタンス化だけをテスト
+        const testApp = new ConstructionEvaluationApp();
+        console.log("test.html: インスタンスの作成に成功しました。エラーは発生していません。");
+        alert("テスト成功：エラーは発生しませんでした。");
+      } catch (e) {
+        console.error("test.html: やはりエラーが発生しました。", e);
+        alert("テスト失敗：まだエラーが発生します。");
+      }
+    </script>
+</body>
+</html>
