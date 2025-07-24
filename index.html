@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建設業評価システム</title>
+    <base href="/hyouka/">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body class="login-mode">
+    <div class="app-container">
+        <header id="app-header" class="app-header" style="display: none;"></header>
+        <main id="main-content" class="main-content"></main>
+        <footer class="app-footer"><p>&copy; 2025 建設業評価システム. All rights reserved.</p></footer>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyAK3wAWIZCultkSQfyse8L8Z-JNMEVK5Wk",
+        authDomain: "hyouka-db.firebaseapp.com",
+        projectId: "hyouka-db",
+        storageBucket: "hyouka-db.appspot.com",
+        messagingSenderId: "861016804589",
+        appId: "1:861016804589:web:d911d516d6c79aa73690e4"
+      };
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    </script>
+    
+    <script src="assets/js/core/i18n.js"></script>
+    <script src="assets/js/core/auth.js"></script>
+    <script src="assets/js/core/router.js"></script>
+    <script src="assets/js/core/api.js"></script>
+    <script src="assets/js/components/notification.js"></script>
+    <script src="assets/js/components/navigation.js"></script>
+    <script src="assets/js/components/polygon-chart.js"></script><スクリプトsrc = "assets/js/components/polygon-chart.js"> 
+    <script src="assets/js/components/bar-chart.js"></script>
+    <script src="assets/js/components/evaluation-form.js"></script>
+    <script src="assets/js/utils/helpers.js"></script>
+
+    <script src="assets/js/pages/dashboard.js"></script>
+    <script src="assets/js/pages/evaluations.js"></script>
+    <script src="assets/js/pages/users.js"></script>
+    <script src="assets/js/pages/settings.js"></script>
+    <script src="assets/js/pages/goal-setting.js"></script>
+    <script src="assets/js/pages/goal-approvals.js"></script>
+    <script src="assets/js/pages/register.js"></script>
+    <script src="assets/js/pages/developer.js"></script>
+    
+    <script src="assets/js/core/app.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const app = new ConstructionEvaluationApp();
+        window.app = app;
+        app.init();
+      });
+    </script>
+
+</body>
+</html>
