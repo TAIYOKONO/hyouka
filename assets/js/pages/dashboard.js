@@ -1,4 +1,4 @@
-// dashboard.js の全コード（ログインフォーム修正版）
+// dashboard.js の全コード（コメント修正版）
 /**
  * dashboard.js - ダッシュボードページ
  */
@@ -45,7 +45,6 @@ async function showDashboard() {
                 </div>
             </div>`;
 
-        // イベントリスナーの登録
         document.querySelectorAll('.btn-view-detail').forEach(button => {
             button.addEventListener('click', (e) => {
                 router.navigate(`/evaluations/${e.currentTarget.dataset.id}`);
@@ -74,12 +73,10 @@ function showLoginPage() {
                 <form id="login-form">
                     <div class="form-group">
                         <label for="email" id="email-label">メールアドレス</label>
-                        {/* ▼▼▼ [修正点] value属性を削除し、autocomplete属性を追加 ▼▼▼ */}
                         <input type="email" id="email" name="email" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="password" id="password-label">パスワード</label>
-                        {/* ▼▼▼ [修正点] value属性を削除し、autocomplete属性を追加 ▼▼▼ */}
                         <input type="password" id="password" name="password" required autocomplete="current-password">
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">ログイン</button>
