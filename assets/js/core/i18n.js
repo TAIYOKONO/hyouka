@@ -1,4 +1,4 @@
-// assets/js/core/i18n.js の全コード（フェーズ3改修版）
+// assets/js/core/i18n.js の全コード（パス修正・完成版）
 /**
  * i18n.js - 建設業評価システム 多言語対応
  * 外部JSONファイルとリアルタイムAPI翻訳を組み合わせたハイブリッドシステム
@@ -22,7 +22,8 @@ class HybridTranslationSystem {
             return; // 既に読み込み済み
         }
         try {
-            const response = await fetch(`/locales/${lang}.json`);
+            // ▼▼▼ [修正点] パスを相対パスに変更 ▼▼▼
+            const response = await fetch(`locales/${lang}.json`);
             if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
             this.translations[lang] = await response.json();
         } catch (error) {
@@ -51,24 +52,20 @@ class HybridTranslationSystem {
 
         const langDict = this.translations[this.currentLanguage] || {};
         
-        // 1. 辞書翻訳を優先
         if (langDict[key]) {
             return langDict[key];
         }
 
-        // 2. 日本語の場合は、キーが見つからなければフォールバックテキストをそのまま返す
         if (this.currentLanguage === 'ja') {
             return fallbackText;
         }
 
-        // 3. リアルタイム翻訳（キャッシュ優先）
         const textToTranslate = fallbackText;
         const cacheKey = `${textToTranslate}_${this.currentLanguage}`;
         if (this.translationCache.has(cacheKey)) {
             return this.translationCache.get(cacheKey);
         }
 
-        // 4. API翻訳を実行
         try {
             const translated = await this.translateWithAPI(textToTranslate);
             this.translationCache.set(cacheKey, translated);
@@ -76,7 +73,7 @@ class HybridTranslationSystem {
             return translated;
         } catch (error) {
             console.warn(`Translation API failed for "${textToTranslate}":`, error);
-            return textToTranslate; // 失敗した場合は元のテキストを返す
+            return textToTranslate;
         }
     }
 
@@ -90,7 +87,6 @@ class HybridTranslationSystem {
         this.currentLanguage = lang;
         localStorage.setItem('app_language', lang);
         
-        // 新しい言語のファイルを読み込み、UIを更新
         await this.loadLanguage(lang);
         await this.updatePageTranslations();
         
@@ -139,9 +135,9 @@ class HybridTranslationSystem {
     }
 }
 
-// グローバルインスタンスを生成して初期化
+// グローバルインスタンスを生成
 const i18nManager = new HybridTranslationSystem();
-window.i18n = i18nManager; // グローバルアクセスポイント
+window.i18n = i18nManager;
 
 // アプリケーション起動時に初期化を実行
 document.addEventListener('DOMContentLoaded', () => {
