@@ -133,7 +133,7 @@ async function handleDeveloperPageClicks(e) {
     if (target.classList.contains('btn-approve-admin')) {
         const userId = target.dataset.id;
         const userName = target.dataset.name;
-        if (confirm(`「${userName}」の管理者アカウントを承認しますか？`)) {if (confirm(`「${userName}」の管理者アカウントを承認しますか？`)) {
+        if (confirm(`「${userName}」の管理者アカウントを承認しますか？`)) {
             try {
                 await api.approveAdmin(userId);
                 showNotification('管理者アカウントを承認しました。', 'success');
@@ -158,4 +158,4 @@ async function handleDeveloperPageClicks(e) {
             }
         }
     }
-    }
+}
