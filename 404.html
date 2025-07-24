@@ -1,4 +1,24 @@
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>建設業評価システム</title>
+    <base href="/hyouka/">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+</head>
+<body class="login-mode">
+    <div class="app-container">
+        <header id="app-header" class="app-header" style="display: none;"></header>
+        <main id="main-content" class="main-content"></main>
+        <footer class="app-footer"><p>&copy; 2025 建設業評価システム. All rights reserved.</p></footer>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script>
@@ -19,7 +39,7 @@
     <script src="assets/js/core/api.js"></script>
 
     <script src="assets/js/components/notification.js"></script>
-    <script src="assets.js/components/navigation.js"></script>
+    <script src="assets/js/components/navigation.js"></script>
     <script src="assets/js/components/polygon-chart.js"></script>
     <script src="assets/js/components/bar-chart.js"></script>
     <script src="assets/js/components/evaluation-form.js"></script>
@@ -33,160 +53,9 @@
     <script src="assets/js/pages/goal-setting.js"></script>
     <script src="assets/js/pages/goal-approvals.js"></script>
     <script src="assets/js/pages/register.js"></script>
-    
     <script src="assets/js/pages/developer.js"></script>
     
     <script src="assets/js/core/app.js"></script>
-    
-    ```
 
-#### **2. `i18n.js` の修正**
-
-翻訳ファイル（`.json`）を読み込むパスの指定を修正します。以下が、変更を反映した`i18n.js`の全コードです。
-
-```javascript
-// assets/js/core/i18n.js の全コード（パス修正版）
-/**
- * i18n.js - 建設業評価システム 多言語対応
- * 外部JSONファイルとリアルタイムAPI翻訳を組み合わせたハイブリッドシステム
- */
-
-class HybridTranslationSystem {
-    constructor() {
-        this.currentLanguage = localStorage.getItem('app_language') || 'ja';
-        this.translations = {}; // 動的に読み込むため、初期状態は空
-        this.isLoaded = false;
-        this.gasApiUrl = 'YOUR_GAS_API_URL'; // Google Apps Script APIのURL（後で設定）
-        this.translationCache = new Map(JSON.parse(localStorage.getItem('translation_cache') || '[]'));
-    }
-
-    /**
-     * 指定された言語の翻訳ファイルを読み込む
-     * @param {string} lang - 言語コード (e.g., 'ja', 'vi', 'en')
-     */
-    async loadLanguage(lang) {
-        if (this.translations[lang]) {
-            return; // 既に読み込み済み
-        }
-        try {
-            // ▼▼▼ [修正点] パスを相対パスに変更 ▼▼▼
-            const response = await fetch(`locales/${lang}.json`);
-            if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
-            this.translations[lang] = await response.json();
-        } catch (error) {
-            console.error(error);
-            this.translations[lang] = {}; // 失敗した場合は空のオブジェクトを設定
-        }
-    }
-
-    /**
-     * システムの初期化。現在の言語の翻訳ファイルを読み込む。
-     */
-    async init() {
-        await this.loadLanguage(this.currentLanguage);
-        this.isLoaded = true;
-        console.log(`🌐 Translation for '${this.currentLanguage}' loaded.`);
-    }
-
-    /**
-     * キーまたはフリーテキストを翻訳する
-     * @param {string} key - 翻訳キー
-     * @param {string} [fallbackText] - キーが見つからない場合のフォールバックテキスト
-     * @returns {Promise<string>} 翻訳されたテキスト
-     */
-    async t(key, fallbackText = key) {
-        if (!this.isLoaded) await this.init();
-
-        const langDict = this.translations[this.currentLanguage] || {};
-        
-        if (langDict[key]) {
-            return langDict[key];
-        }
-
-        if (this.currentLanguage === 'ja') {
-            return fallbackText;
-        }
-
-        const textToTranslate = fallbackText;
-        const cacheKey = `${textToTranslate}_${this.currentLanguage}`;
-        if (this.translationCache.has(cacheKey)) {
-            return this.translationCache.get(cacheKey);
-        }
-
-        try {
-            const translated = await this.translateWithAPI(textToTranslate);
-            this.translationCache.set(cacheKey, translated);
-            this.saveCacheToStorage();
-            return translated;
-        } catch (error) {
-            console.warn(`Translation API failed for "${textToTranslate}":`, error);
-            return textToTranslate;
-        }
-    }
-
-    /**
-     * 言語を切り替える
-     * @param {string} lang - 新しい言語コード
-     */
-    async setLanguage(lang) {
-        if (lang === this.currentLanguage && this.isLoaded) return;
-
-        this.currentLanguage = lang;
-        localStorage.setItem('app_language', lang);
-        
-        await this.loadLanguage(lang);
-        await this.updatePageTranslations();
-        
-        console.log(`🌐 Language changed to: ${lang}`);
-    }
-
-    /**
-     * ページ上のdata-i18n属性を持つ要素のテキストを全て更新する
-     */
-    async updatePageTranslations() {
-        const elements = document.querySelectorAll('[data-i18n]');
-        for (const element of elements) {
-            const key = element.dataset.i18n;
-            const fallback = element.textContent;
-            element.textContent = await this.t(key, fallback);
-        }
-    }
-
-    /**
-     * Google Apps Script APIによるリアルタイム翻訳
-     * @param {string} text - 翻訳するテキスト
-     * @returns {Promise<string>} 翻訳結果
-     */
-    async translateWithAPI(text) {
-        if (!this.gasApiUrl || this.gasApiUrl === 'YOUR_GAS_API_URL') {
-            throw new Error('GAS API URL not configured');
-        }
-        
-        const params = new URLSearchParams({ text: text, source: 'ja', target: this.currentLanguage });
-        const response = await fetch(`${this.gasApiUrl}?${params}`);
-        if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
-        
-        const data = await response.json();
-        if (data.code === 200 && data.translated) {
-            return data.translated;
-        } else {
-            throw new Error(data.error || 'Unknown API error');
-        }
-    }
-    
-    /**
-     * 翻訳キャッシュをLocalStorageに保存する
-     */
-    saveCacheToStorage() {
-        localStorage.setItem('translation_cache', JSON.stringify(Array.from(this.translationCache.entries())));
-    }
-}
-
-// グローバルインスタンスを生成
-const i18nManager = new HybridTranslationSystem();
-window.i18n = i18nManager;
-
-// アプリケーション起動時に初期化を実行
-document.addEventListener('DOMContentLoaded', () => {
-    i18nManager.init();
-});
+</body>
+</html>
