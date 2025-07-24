@@ -1,80 +1,39 @@
 /**
- * utils/helpers.js - ヘルパー関数 (最終版)
+ * utils/helpers.js - ヘルパー関数 (フェーズ3整理版)
+ */
+
+/**
+ * ページ上部のパンくずリストを更新する
+ * @param {Array<Object>} items - パンくずリストのアイテム配列 e.g. [{label: 'Home', path: '#/home'}]
  */
 function updateBreadcrumbs(items) {
-    const breadcrumbs = document.getElementById('breadcrumbs');
-    if (!breadcrumbs || !items || !items.length) return;
-    breadcrumbs.innerHTML = items.map((item, index) => 
-        index === items.length - 1 ? `<span class="current">${item.label}</span>` : `<a href="#" onclick="router.navigate('${item.path || ''}')">${item.label}</a>`
-    ).join(' <span class="separator">></span> ');
-}
-
-function updatePolygonChart() {
-    if (!window.polygonChart) return;
-    const categories = window.polygonChart.categories || [];
-    const newData = categories.map(category => {
-        const input = document.querySelector(`input[name="rating-${category.id}"]`);
-        const value = parseFloat(input?.value);
-        return isNaN(value) ? 0 : Math.max(0, Math.min(5, value));
-    });
-    window.polygonChart.updateData(newData);
-}
-
-function initializePolygonChart(categories = []) {
-    setTimeout(() => {
-        try {
-            if (window.polygonChart && typeof window.polygonChart.destroy === 'function') {
-                window.polygonChart.destroy();
-            }
-            window.polygonChart = new PolygonChart('evaluation-polygon-chart', categories);
-        } catch (error) {
-            console.error('Error creating polygon chart:', error);
-        }
-    }, 100);
-}
-
-async function handleSaveEvaluation(e) {
-    e.preventDefault();
-    const period = document.getElementById('evaluation-period').value;
-    const subordinate = document.getElementById('subordinate-select').value;
-    if (!period || !subordinate) {
-        return showNotification('評価期間と対象者を選択してください', 'error');
-    }
-    const ratings = {};
-    let hasRatings = false;
+    const breadcrumbsContainer = document.getElementById('breadcrumbs'); // 将来的に専用コンテナを想定
+    const mainContent = document.getElementById('main-content');
     
-    document.querySelectorAll('.rating-input').forEach(input => {
-        const value = parseFloat(input.value);
-        if (!isNaN(value) && value >= 1 && value <= 5) {
-            const itemId = input.name.replace('rating-', '');
-            ratings[itemId] = value;
-            hasRatings = true;
-        }
-    });
+    if (!mainContent) return;
 
-    if (!hasRatings) {
-        return showNotification('少なくとも1つの評価項目を入力してください', 'error');
+    // 既存のパンくずリストを削除
+    const existingBreadcrumbs = mainContent.querySelector('.breadcrumbs');
+    if (existingBreadcrumbs) {
+        existingBreadcrumbs.remove();
     }
-    const ratingValues = Object.values(ratings);
-    const avgRating = ratingValues.reduce((sum, r) => sum + r, 0) / ratingValues.length || 0;
-    
-    const newEvaluationData = {
-        subordinate: subordinate,
-        evaluator: app.currentUser.name,
-        evaluatorId: app.currentUser.uid,
-        status: 'completed',
-        overallRating: parseFloat(avgRating.toFixed(1)),
-        ratings: ratings,
-        overallComment: document.getElementById('overall-comment').value,
-        period: period,
-    };
-    
-    try {
-        await api.createEvaluation(newEvaluationData);
-        showNotification('評価を保存しました！', 'success');
-        setTimeout(() => router.navigate('/evaluations'), 1500);
-    } catch (error) {
-        showNotification('評価の保存に失敗しました', 'error');
-        console.error("Failed to save evaluation:", error);
-    }
+
+    if (!items || items.length === 0) return;
+
+    const breadcrumbsHTML = `
+        <nav class="breadcrumbs" aria-label="breadcrumb">
+            ${items.map((item, index) => {
+                if (index === items.length - 1) {
+                    // 最後のアイテムはテキストとして表示
+                    return `<span class="current" aria-current="page">${item.label}</span>`;
+                } else {
+                    // 途中のアイテムはリンクとして表示
+                    return `<a href="${item.path || '#'}">${item.label}</a>`;
+                }
+            }).join('<span class="separator">/</span>')}
+        </nav>
+    `;
+
+    // main-contentの先頭に挿入
+    mainContent.insertAdjacentHTML('afterbegin', breadcrumbsHTML);
 }
