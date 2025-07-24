@@ -1,6 +1,6 @@
-// dashboard.js の全コード（修正版）
+// dashboard.js の全コード（ログインフォーム修正版）
 /**
- * dashboard.js - ダッシュボードページ (最終版)
+ * dashboard.js - ダッシュボードページ
  */
 async function showDashboard() {
     if (window.navigation) window.navigation.render();
@@ -10,7 +10,6 @@ async function showDashboard() {
     mainContent.innerHTML = `<div class="page-content"><p>読み込み中...</p></div>`;
 
     try {
-        // ▼▼▼ getEvaluationItemsの呼び出しを削除 ▼▼▼
         const evaluations = await api.getEvaluations();
 
         const completedEvaluations = evaluations.filter(e => e.status === 'completed');
@@ -27,7 +26,7 @@ async function showDashboard() {
                         <div class="stat-card"><div class="stat-number">${evaluations.length}</div><div class="stat-label">総評価数</div></div>
                         <div class="stat-card"><div class="stat-number">${completedEvaluations.length}</div><div class="stat-label">完了済み</div></div>
                         <div class="stat-card"><div class="stat-number">${averageRating}</div><div class="stat-label">平均評価</div></div>
-                        </div>
+                    </div>
                     <h3>最近の活動</h3>
                     <div class="table-container">
                         <table class="table">
@@ -59,7 +58,9 @@ async function showDashboard() {
     }
 }
 
-// ログインページ表示用の関数
+/**
+ * ログインページ表示用の関数
+ */
 function showLoginPage() {
     const mainContent = document.getElementById('main-content');
     if (!mainContent) return;
@@ -73,11 +74,13 @@ function showLoginPage() {
                 <form id="login-form">
                     <div class="form-group">
                         <label for="email" id="email-label">メールアドレス</label>
-                        <input type="email" id="email" name="email" value="admin@company.com" required>
+                        {/* ▼▼▼ [修正点] value属性を削除し、autocomplete属性を追加 ▼▼▼ */}
+                        <input type="email" id="email" name="email" required autocomplete="email">
                     </div>
                     <div class="form-group">
                         <label for="password" id="password-label">パスワード</label>
-                        <input type="password" id="password" name="password" value="password123" required>
+                        {/* ▼▼▼ [修正点] value属性を削除し、autocomplete属性を追加 ▼▼▼ */}
+                        <input type="password" id="password" name="password" required autocomplete="current-password">
                     </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;" id="login-submit">ログイン</button>
                 </form>
